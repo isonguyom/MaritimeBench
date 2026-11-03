@@ -1,5 +1,6 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import { randomUUID } from "node:crypto";
 
 import type { EvaluationRunResult } from "./evaluation.runner";
 
@@ -11,12 +12,14 @@ export function saveEvaluationResult(
   // Ensure the results directory exists.
   mkdirSync(resultsDirectory, { recursive: true });
 
-  // Create a timestamped filename for this evaluation run.
-  const timestamp = new Date()
-    .toISOString()
-    .replace(/[:.]/g, "-");
+  // Create a unique filename for this evaluation trial.
+  const runId = result.run_id ?? "single-run";
+  const trialNumber = result.trial_number ?? 1;
+  const uniqueId = randomUUID();
 
-  const filename = `${result.task_id}_${timestamp}.json`;
+  const filename =
+    `${result.task_id}_${runId}_trial-${trialNumber}_${uniqueId}.json`;
+
   const filePath = path.join(resultsDirectory, filename);
 
   // Save the complete evaluation result.

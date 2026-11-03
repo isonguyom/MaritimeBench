@@ -64,6 +64,43 @@ describe("runEvaluation", () => {
     expect(adapter.generate).toHaveBeenCalledOnce();
   });
 
+  it("should generate run metadata when none is supplied", async () => {
+    const adapter = createMockAdapter("{}");
+
+    const result = await runEvaluation("MB-01", adapter, {
+      model: "mock-model",
+    });
+
+    expect(result.run_id).toMatch(/^[0-9a-f-]{36}$/i);
+    expect(result.trial_number).toBe(1);
+
+    expect(result.started_at).toBeDefined();
+    expect(result.completed_at).toBeDefined();
+
+    expect(new Date(result.started_at!).toISOString()).toBe(result.started_at);
+
+    expect(new Date(result.completed_at!).toISOString()).toBe(
+      result.completed_at,
+    );
+
+    expect(new Date(result.completed_at!).getTime()).toBeGreaterThanOrEqual(
+      new Date(result.started_at!).getTime(),
+    );
+  });
+
+  it("should preserve a supplied run ID and trial number", async () => {
+    const adapter = createMockAdapter("{}");
+
+    const result = await runEvaluation("MB-01", adapter, {
+      model: "mock-model",
+      runId: "experiment-001",
+      trialNumber: 3,
+    });
+
+    expect(result.run_id).toBe("experiment-001");
+    expect(result.trial_number).toBe(3);
+  });
+
   it("should pass generation settings to the model adapter", async () => {
     const adapter = createMockAdapter("{}");
 
@@ -106,15 +143,11 @@ describe("runEvaluation", () => {
     const request = adapter.generate.mock.calls[0][0];
 
     expect(request.userPrompt).toContain("MB-01");
-    expect(request.userPrompt).not.toContain(
-      "2026-10-16T02:00:00Z",
-    );
-    expect(request.userPrompt).not.toContain(
-      "total_travel_hours",
-    );
+    expect(request.userPrompt).not.toContain("2026-10-16T02:00:00Z");
+    expect(request.userPrompt).not.toContain("total_travel_hours");
   });
 
-    it("should run a complete evaluation using MockAdapter and save the result", async () => {
+  it("should run a complete evaluation using MockAdapter and save the result", async () => {
     const mockResponse = {
       task_id: "MB-01",
       status: "completed",
@@ -128,9 +161,7 @@ describe("runEvaluation", () => {
       explanation: "Travel time is 240 / 12 = 20 hours.",
     };
 
-    const adapter = new MockAdapter(
-      JSON.stringify(mockResponse),
-    );
+    const adapter = new MockAdapter(JSON.stringify(mockResponse));
 
     const result = await runEvaluation("MB-01", adapter, {
       model: "mock-model",
@@ -140,7 +171,8 @@ describe("runEvaluation", () => {
 
     const savedFiles = readdirSync(resultsDirectory).filter(
       (filename) =>
-        filename.startsWith("MB-01_") && filename.endsWith(".json"),
+        filename.startsWith(`MB-01_${result.run_id}_trial-1_`) &&
+        filename.endsWith(".json"),
     );
 
     expect(result.grading.score).toBe(100);
@@ -154,12 +186,14 @@ describe("runEvaluation", () => {
 
     expect(existsSync(savedFile)).toBe(true);
 
-    const savedResult = JSON.parse(
-      readFileSync(savedFile, "utf-8"),
-    );
+    const savedResult = JSON.parse(readFileSync(savedFile, "utf-8"));
 
     expect(savedResult.task_id).toBe("MB-01");
     expect(savedResult.provider).toBe("mock");
     expect(savedResult.grading.score).toBe(100);
+    expect(savedResult.run_id).toBe(result.run_id);
+    expect(savedResult.trial_number).toBe(1);
+    expect(savedResult.started_at).toBe(result.started_at);
+    expect(savedResult.completed_at).toBe(result.completed_at);
   });
 });

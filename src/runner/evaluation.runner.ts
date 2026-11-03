@@ -1,3 +1,6 @@
+
+import { randomUUID } from "node:crypto";
+
 import type { ModelAdapter } from "../adapters/model.adapter";
 import { gradeVoyageResponse } from "../graders/voyage.grader";
 import { loadEvaluationData } from "./data.loader";
@@ -8,10 +11,16 @@ export interface EvaluationRunOptions {
   model: string;
   temperature?: number;
   maxOutputTokens?: number;
+  runId?: string;
+  trialNumber?: number;
 }
 
 export interface EvaluationRunResult {
   task_id: string;
+  run_id?: string;
+  trial_number?: number;
+  started_at?: string;
+  completed_at?: string;
   provider: string;
   model: string;
   latency_ms: number;
@@ -27,6 +36,10 @@ export async function runEvaluation(
   adapter: ModelAdapter,
   options: EvaluationRunOptions,
 ): Promise<EvaluationRunResult> {
+  const startedAt = new Date();
+  const runId = options.runId ?? randomUUID();
+  const trialNumber = options.trialNumber ?? 1;
+
   // Load and validate the task and its reference.
   const { task, reference } = loadEvaluationData(taskId);
 
@@ -70,6 +83,10 @@ export async function runEvaluation(
 
   const result: EvaluationRunResult = {
     task_id: taskId,
+    run_id: runId,
+    trial_number: trialNumber,
+    started_at: startedAt.toISOString(),
+    completed_at: new Date().toISOString(),
     provider: modelResponse.provider,
     model: modelResponse.model,
     latency_ms: modelResponse.latencyMs,
@@ -84,7 +101,7 @@ export async function runEvaluation(
     grading,
   };
 
-  // Save the evaluation result to disk.
+  // Save the complete evaluation result.
   saveEvaluationResult(result);
 
   return result;
