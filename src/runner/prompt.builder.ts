@@ -11,30 +11,79 @@ export function buildEvaluationPrompt(
   const systemPrompt = `
 You are an AI assistant being evaluated on operational voyage planning.
 
-Your task is to analyse the supplied voyage information and calculate the voyage outcome accurately.
+Your responsibility is to calculate voyage outcomes accurately and assess the operational constraints supplied in the task.
 
-Follow these rules strictly:
+Follow these rules strictly.
+
+## 1. Units and timestamps
 
 1. Use UTC for all timestamps.
-2. Use nautical miles (nm) for distance and knots (kn) for speed.
-3. Calculate travel time using distance divided by speed.
-4. Apply weather speed restrictions only during the specified restriction period and only while the vessel is underway.
-5. Apply port receiving windows when calculating permitted arrival and waiting time.
-6. Treat port-window opening and closing times as inclusive.
-7. A hard deadline is feasible only if the physical ETA is at or before the deadline.
-8. Do not invent missing information, vessel speeds, or operational assumptions.
-9. If required information is missing, identify it and return insufficient_information.
-10. If an input is invalid, return invalid_input.
-11. Explain your calculations and state any assumptions.
+2. Use nautical miles (nm) for distance.
+3. Use knots (kn) for speed.
+4. Express travel duration and waiting time in hours.
+5. Return timestamps in ISO 8601 UTC format ending in Z.
 
-Return only a valid JSON object with these fields:
+## 2. Travel calculations
+
+1. Calculate travel time using distance divided by speed.
+2. For multi-leg voyages, calculate each leg separately and add the travel durations.
+3. Use the speed specified for each leg.
+4. Total travel hours must represent time spent underway, excluding waiting time at port.
+5. Calculate physical ETA by adding total travel duration to the departure time, accounting for applicable weather restrictions.
+
+## 3. Weather restrictions
+
+1. Apply a weather speed restriction only while the vessel is underway.
+2. The restriction start time is inclusive.
+3. The restriction end time is exclusive.
+4. Use the restricted speed during the applicable restriction period.
+5. Use the normal vessel speed before the restriction starts and after it ends.
+6. Calculate the distance travelled during each speed interval separately.
+7. Do not apply a weather restriction to time spent waiting at port.
+8. Do not assume that a restriction affects the entire voyage unless the supplied times establish that.
+
+## 4. Port receiving windows
+
+1. Apply the port receiving window after calculating physical ETA.
+2. Port receiving windows recur daily unless the task specifies otherwise.
+3. Both opening and closing times are inclusive.
+4. If physical ETA falls within the receiving window, permitted arrival equals physical ETA and waiting time is zero.
+5. If physical ETA falls outside the receiving window, calculate the next valid opening time and the waiting duration.
+6. Waiting time is the difference between physical ETA and permitted arrival.
+7. Do not add port waiting time to total travel hours.
+8. Do not change physical ETA because of port waiting.
+
+## 5. Hard deadlines
+
+1. Assess a hard deadline using physical ETA.
+2. The deadline is feasible if physical ETA is at or before the deadline.
+3. Arrival exactly at the deadline is feasible.
+4. Arrival after the deadline is infeasible.
+5. Do not use permitted arrival instead of physical ETA when assessing a deadline.
+6. Do not assume a deadline exists if none is supplied.
+
+## 6. Missing and invalid information
+
+1. Do not invent missing information, including vessel speeds, distances, timestamps, or operational assumptions.
+2. If a required input is missing, return insufficient_information.
+3. Identify every missing required input in missing_inputs.
+4. When a required input is missing and the calculation cannot be completed, return null for the affected calculation fields.
+5. If an input is invalid, return invalid_input.
+6. Distances and speeds must be greater than zero.
+7. Restriction end time must be later than restriction start time.
+
+## 7. Output requirements
+
+Return exactly one valid JSON object.
+
+Use all the following fields:
 
 {
   "task_id": "string",
   "status": "completed | insufficient_information | invalid_input",
   "total_travel_hours": "number or null",
-  "physical_eta": "ISO 8601 timestamp or null",
-  "permitted_arrival": "ISO 8601 timestamp or null",
+  "physical_eta": "ISO 8601 UTC timestamp or null",
+  "permitted_arrival": "ISO 8601 UTC timestamp or null",
   "waiting_hours": "number or null",
   "deadline_feasible": "boolean or null",
   "missing_inputs": ["string"],
@@ -42,9 +91,17 @@ Return only a valid JSON object with these fields:
   "explanation": "string"
 }
 
-Do not include Markdown formatting, code fences, or additional text outside the JSON object.
+Additional output rules:
 
-Do not claim that a voyage is operationally feasible merely because its physical ETA has been calculated. Assess each applicable constraint separately.
+1. Include every field, even when its value is null or an empty array.
+2. Use null when a field is not applicable or cannot be determined.
+3. Use an empty array when there are no missing inputs or assumptions.
+4. Do not add fields outside the specified JSON structure.
+5. Explain the calculations clearly, including relevant speed intervals, waiting time, and deadline assessment.
+6. State only assumptions that are necessary and supported by the supplied information.
+7. Do not include Markdown, code fences, or text outside the JSON object.
+
+Do not claim that a voyage is operationally feasible merely because its physical ETA has been calculated. Assess each applicable operational constraint separately.
 `.trim();
 
   const userPrompt = `
@@ -54,9 +111,9 @@ TASK DATA:
 
 ${JSON.stringify(task, null, 2)}
 
-Calculate the voyage outcome using the supplied information and follow the system instructions.
+Calculate the voyage outcome using the supplied information.
 
-Return the result in the required JSON format.
+Follow all system instructions and return the result in the required JSON format.
 `.trim();
 
   return {
