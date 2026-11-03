@@ -1,0 +1,18 @@
+{
+  "task_id": "MB-05",
+  "title": "Port Waiting Time",
+  "description": "Calculate the physical arrival time and the additional waiting time required when a vessel arrives after the port's daily receiving window has closed.",
+  "departure_time": "2026-10-15T08:00:00Z",
+  "legs": [
+    {
+      "leg_id": "LEG-01",
+      "distance_nm": 180,
+      "speed_kn": 12
+    }
+  ],
+  "weather_restrictions": [],
+  "port_window": {
+    "opens_at": "18:00",
+    "closes_at": "22:00"
+  }
+}

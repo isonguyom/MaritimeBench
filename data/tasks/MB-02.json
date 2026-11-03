@@ -1,0 +1,19 @@
+{
+  "task_id": "MB-02",
+  "title": "Multi-leg Voyage",
+  "description": "Calculate the total travel duration and final physical arrival time for a vessel completing two consecutive voyage legs at a constant speed.",
+  "departure_time": "2026-10-15T06:00:00Z",
+  "legs": [
+    {
+      "leg_id": "LEG-01",
+      "distance_nm": 120,
+      "speed_kn": 12
+    },
+    {
+      "leg_id": "LEG-02",
+      "distance_nm": 240,
+      "speed_kn": 12
+    }
+  ],
+  "weather_restrictions": []
+}

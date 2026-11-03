@@ -1,0 +1,18 @@
+{
+  "task_id": "MB-04",
+  "title": "Port Arrival Within Receiving Window",
+  "description": "Determine whether a vessel's physical arrival falls within the port's daily receiving window and calculate any required waiting time.",
+  "departure_time": "2026-10-15T08:00:00Z",
+  "legs": [
+    {
+      "leg_id": "LEG-01",
+      "distance_nm": 120,
+      "speed_kn": 10
+    }
+  ],
+  "weather_restrictions": [],
+  "port_window": {
+    "opens_at": "18:00",
+    "closes_at": "22:00"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "task_id": "MB-08",
+  "title": "Combined Weather and Port Constraints",
+  "description": "Calculate the physical arrival time of a vessel subject to a temporary weather-related speed restriction. Then determine the permitted arrival time and waiting period based on the port's daily receiving window. The weather restriction applies only while underway.",
+  "departure_time": "2026-10-15T08:00:00Z",
+  "legs": [
+    {
+      "leg_id": "LEG-01",
+      "distance_nm": 180,
+      "speed_kn": 12
+    }
+  ],
+  "weather_restrictions": [
+    {
+      "start_time": "2026-10-15T12:00:00Z",
+      "end_time": "2026-10-15T16:00:00Z",
+      "restricted_speed_kn": 6
+    }
+  ],
+  "port_window": {
+    "opens_at": "18:00",
+    "closes_at": "22:00"
+  }
+}

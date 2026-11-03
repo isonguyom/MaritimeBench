@@ -1,0 +1,12 @@
+{
+  "task_id": "MB-08",
+  "status": "completed",
+  "total_travel_hours": 17,
+  "physical_eta": "2026-10-16T01:00:00Z",
+  "permitted_arrival": "2026-10-16T18:00:00Z",
+  "waiting_hours": 17,
+  "deadline_feasible": null,
+  "missing_inputs": [],
+  "assumptions": [],
+  "explanation": "The vessel travels at 12 knots from 08:00 to 12:00, covering 48 nautical miles. During the four-hour weather restriction, it travels at 6 knots, covering 24 nautical miles. After the restriction ends at 16:00, it travels the remaining 108 nautical miles at 12 knots, taking 9 hours. Total travel time is 17 hours, giving a physical ETA of 01:00 UTC on 16 October. Since this is outside the port's 18:00–22:00 receiving window, the vessel must wait until 18:00 UTC. Total waiting time is 17 hours."
+}

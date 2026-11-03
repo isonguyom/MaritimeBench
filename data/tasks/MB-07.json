@@ -1,0 +1,13 @@
+{
+  "task_id": "MB-07",
+  "title": "Missing Required Information",
+  "description": "Determine whether a voyage arrival time can be calculated when the vessel's speed is missing. Do not assume or invent a vessel speed. Identify the missing information and request clarification.",
+  "departure_time": "2026-10-15T06:00:00Z",
+  "legs": [
+    {
+      "leg_id": "LEG-01",
+      "distance_nm": 240
+    }
+  ],
+  "weather_restrictions": []
+}

@@ -1,0 +1,20 @@
+{
+  "task_id": "MB-03",
+  "title": "Weather Speed Restriction",
+  "description": "Calculate the physical arrival time when a vessel encounters a temporary weather-related speed restriction during its voyage. The restriction applies only while the vessel is underway.",
+  "departure_time": "2026-10-15T08:00:00Z",
+  "legs": [
+    {
+      "leg_id": "LEG-01",
+      "distance_nm": 180,
+      "speed_kn": 12
+    }
+  ],
+  "weather_restrictions": [
+    {
+      "start_time": "2026-10-15T12:00:00Z",
+      "end_time": "2026-10-15T16:00:00Z",
+      "restricted_speed_kn": 6
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "task_id": "MB-01",
+  "title": "Baseline ETA",
+  "description": "Calculate the physical arrival time for a vessel completing a single voyage leg at a constant speed.",
+  "departure_time": "2026-10-15T06:00:00Z",
+  "legs": [
+    {
+      "leg_id": "LEG-01",
+      "distance_nm": 240,
+      "speed_kn": 12
+    }
+  ],
+  "weather_restrictions": []
+}

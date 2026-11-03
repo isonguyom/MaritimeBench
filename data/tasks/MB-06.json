@@ -1,0 +1,15 @@
+{
+  "task_id": "MB-06",
+  "title": "Hard Deadline Feasibility",
+  "description": "Calculate the physical arrival time and determine whether the vessel can meet a hard arrival deadline. The deadline is feasible only if the physical arrival time is at or before the deadline.",
+  "departure_time": "2026-10-15T06:00:00Z",
+  "legs": [
+    {
+      "leg_id": "LEG-01",
+      "distance_nm": 240,
+      "speed_kn": 12
+    }
+  ],
+  "weather_restrictions": [],
+  "deadline": "2026-10-16T01:00:00Z"
+}
