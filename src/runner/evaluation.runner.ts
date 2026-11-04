@@ -1,4 +1,3 @@
-
 import { randomUUID } from "node:crypto";
 
 import type { ModelAdapter } from "../adapters/model.adapter";
@@ -23,6 +22,8 @@ export interface EvaluationRunResult {
   completed_at?: string;
   provider: string;
   model: string;
+  temperature?: number;
+  max_output_tokens?: number;
   latency_ms: number;
   input_tokens?: number;
   output_tokens?: number;
@@ -68,18 +69,11 @@ export async function runEvaluation(
   } catch (error) {
     parsedResponse = modelResponse.content;
 
-    parseError =
-      error instanceof Error
-        ? error.message
-        : String(error);
+    parseError = error instanceof Error ? error.message : String(error);
   }
 
   // Grade the response against the independently loaded reference.
-  const grading = gradeVoyageResponse(
-    parsedResponse,
-    task,
-    reference,
-  );
+  const grading = gradeVoyageResponse(parsedResponse, task, reference);
 
   const result: EvaluationRunResult = {
     task_id: taskId,
@@ -89,6 +83,12 @@ export async function runEvaluation(
     completed_at: new Date().toISOString(),
     provider: modelResponse.provider,
     model: modelResponse.model,
+    ...(options.temperature !== undefined
+      ? { temperature: options.temperature }
+      : {}),
+    ...(options.maxOutputTokens !== undefined
+      ? { max_output_tokens: options.maxOutputTokens }
+      : {}),
     latency_ms: modelResponse.latencyMs,
     ...(modelResponse.inputTokens !== undefined
       ? { input_tokens: modelResponse.inputTokens }

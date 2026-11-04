@@ -2,8 +2,17 @@ import { VoyageResponseSchema } from "../schemas/response.schema";
 import type { VoyageResponse } from "../schemas/response.schema";
 import type { VoyageTask } from "../schemas/task.schema";
 
+export type GradingCategory =
+  | "response_integrity"
+  | "information_handling"
+  | "calculation"
+  | "weather_constraint"
+  | "port_constraint"
+  | "deadline_constraint";
+
 export interface GradingCheck {
   name: string;
+  categories: GradingCategory[];
   passed: boolean;
   expected: unknown;
   actual: unknown;
@@ -29,8 +38,7 @@ export function gradeVoyageResponse(
   task: VoyageTask,
   reference: VoyageResponse,
 ): GradingResult {
-  
-    // Prevent grading a response against the wrong task reference.
+  // Prevent grading a response against the wrong task reference.
   if (task.task_id !== reference.task_id) {
     throw new Error(
       `Task/reference mismatch: task "${task.task_id}" does not match reference "${reference.task_id}".`,
@@ -59,12 +67,14 @@ export function gradeVoyageResponse(
 
   function addCheck(
     name: string,
+    categories: GradingCategory[],
     passed: boolean,
     expected: unknown,
     actual: unknown,
   ): void {
     checks.push({
       name,
+      categories,
       passed,
       expected,
       actual,
@@ -100,9 +110,9 @@ export function gradeVoyageResponse(
 
     return Math.abs(actual - expected) <= HOURS_TOLERANCE;
   }
-
   addCheck(
     "task_id",
+    ["response_integrity"],
     response.task_id === reference.task_id,
     reference.task_id,
     response.task_id,
@@ -110,6 +120,7 @@ export function gradeVoyageResponse(
 
   addCheck(
     "status",
+    ["response_integrity", "information_handling"],
     response.status === reference.status,
     reference.status,
     response.status,
@@ -120,6 +131,7 @@ export function gradeVoyageResponse(
 
   addCheck(
     "missing_inputs",
+    ["information_handling"],
     JSON.stringify(actualMissingInputs) ===
       JSON.stringify(expectedMissingInputs),
     expectedMissingInputs,
@@ -130,20 +142,20 @@ export function gradeVoyageResponse(
   if (reference.status === "completed") {
     addCheck(
       "total_travel_hours",
-      numbersMatch(
-        response.total_travel_hours,
-        reference.total_travel_hours,
-      ),
+      task.weather_restrictions.length > 0
+        ? ["calculation", "weather_constraint"]
+        : ["calculation"],
+      numbersMatch(response.total_travel_hours, reference.total_travel_hours),
       reference.total_travel_hours,
       response.total_travel_hours,
     );
 
     addCheck(
       "physical_eta",
-      timestampsMatch(
-        response.physical_eta,
-        reference.physical_eta,
-      ),
+      task.weather_restrictions.length > 0
+        ? ["calculation", "weather_constraint"]
+        : ["calculation"],
+      timestampsMatch(response.physical_eta, reference.physical_eta),
       reference.physical_eta,
       response.physical_eta,
     );
@@ -152,6 +164,7 @@ export function gradeVoyageResponse(
     if (task.port_window) {
       addCheck(
         "permitted_arrival",
+        ["port_constraint"],
         timestampsMatch(
           response.permitted_arrival,
           reference.permitted_arrival,
@@ -162,10 +175,8 @@ export function gradeVoyageResponse(
 
       addCheck(
         "waiting_hours",
-        numbersMatch(
-          response.waiting_hours,
-          reference.waiting_hours,
-        ),
+        ["port_constraint"],
+        numbersMatch(response.waiting_hours, reference.waiting_hours),
         reference.waiting_hours,
         response.waiting_hours,
       );
@@ -175,6 +186,7 @@ export function gradeVoyageResponse(
     if (task.deadline) {
       addCheck(
         "deadline_feasible",
+        ["deadline_constraint"],
         response.deadline_feasible === reference.deadline_feasible,
         reference.deadline_feasible,
         response.deadline_feasible,
@@ -183,51 +195,54 @@ export function gradeVoyageResponse(
   }
 
   // When required information is missing, the model must not invent calculations.
-if (reference.status === "insufficient_information") {
-  addCheck(
-    "total_travel_hours",
-    response.total_travel_hours === reference.total_travel_hours,
-    reference.total_travel_hours,
-    response.total_travel_hours,
-  );
+  if (reference.status === "insufficient_information") {
+    addCheck(
+      "total_travel_hours",
+      ["information_handling"],
+      response.total_travel_hours === null,
+      null,
+      response.total_travel_hours,
+    );
 
-  addCheck(
-    "physical_eta",
-    response.physical_eta === reference.physical_eta,
-    reference.physical_eta,
-    response.physical_eta,
-  );
+    addCheck(
+      "physical_eta",
+      ["information_handling"],
+      response.physical_eta === null,
+      null,
+      response.physical_eta,
+    );
 
-  addCheck(
-    "permitted_arrival",
-    response.permitted_arrival === reference.permitted_arrival,
-    reference.permitted_arrival,
-    response.permitted_arrival,
-  );
+    addCheck(
+      "permitted_arrival",
+      ["information_handling"],
+      response.permitted_arrival === null,
+      null,
+      response.permitted_arrival,
+    );
 
-  addCheck(
-    "waiting_hours",
-    response.waiting_hours === reference.waiting_hours,
-    reference.waiting_hours,
-    response.waiting_hours,
-  );
+    addCheck(
+      "waiting_hours",
+      ["information_handling"],
+      response.waiting_hours === null,
+      null,
+      response.waiting_hours,
+    );
 
-  addCheck(
-    "deadline_feasible",
-    response.deadline_feasible === reference.deadline_feasible,
-    reference.deadline_feasible,
-    response.deadline_feasible,
-  );
-}
+    addCheck(
+      "deadline_feasible",
+      ["information_handling"],
+      response.deadline_feasible === null,
+      null,
+      response.deadline_feasible,
+    );
+  }
 
   const passedChecks = checks.filter((check) => check.passed).length;
   const totalChecks = checks.length;
 
   const score = (passedChecks / totalChecks) * 100;
 
-  const taskPassed = checks.every(
-    (check) => !check.critical || check.passed,
-  );
+  const taskPassed = checks.every((check) => !check.critical || check.passed);
 
   return {
     task_id: reference.task_id,
