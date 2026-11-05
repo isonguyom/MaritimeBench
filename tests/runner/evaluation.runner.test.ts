@@ -16,16 +16,14 @@ function createMockAdapter(
   return {
     provider: "mock-provider",
 
-    generate: vi.fn(
-      async (_request: ModelRequest): Promise<ModelResponse> => ({
-        provider: "mock-provider",
-        model: "mock-model",
-        content,
-        latencyMs: 120,
-        inputTokens: 100,
-        outputTokens: 50,
-      }),
-    ),
+    generate: vi.fn(async (_request: ModelRequest): Promise<ModelResponse> => ({
+      provider: "mock-provider",
+      model: "mock-model",
+      content,
+      latencyMs: 120,
+      inputTokens: 100,
+      outputTokens: 50,
+    })),
   };
 }
 

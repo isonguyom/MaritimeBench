@@ -143,8 +143,8 @@ function normalizeCurrentTrialRecord(
   }
 
   if (Date.parse(record.completed_at) < Date.parse(record.started_at)) {
-  return null;
-}
+    return null;
+  }
 
   const optionalNumericFields = [
     "temperature",

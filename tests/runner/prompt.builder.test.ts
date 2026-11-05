@@ -49,9 +49,7 @@ describe("Evaluation prompt builder", () => {
   it("should instruct the model not to invent missing information", () => {
     const result = buildEvaluationPrompt(task);
 
-    expect(result.systemPrompt).toContain(
-      "Do not invent missing information",
-    );
+    expect(result.systemPrompt).toContain("Do not invent missing information");
     expect(result.systemPrompt).toContain("insufficient_information");
   });
 

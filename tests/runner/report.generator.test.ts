@@ -191,31 +191,31 @@ describe("Report generator", () => {
   });
 
   it("should reject records when completion timestamp precedes start timestamp", () => {
-  const resultsDirectory = createTemporaryDirectory();
+    const resultsDirectory = createTemporaryDirectory();
 
-  const trial = {
-    ...createTrial(),
-    started_at: "2026-10-15T10:00:00.000Z",
-    completed_at: "2026-10-15T09:00:00.000Z",
-  };
+    const trial = {
+      ...createTrial(),
+      started_at: "2026-10-15T10:00:00.000Z",
+      completed_at: "2026-10-15T09:00:00.000Z",
+    };
 
-  writeFileSync(
-    path.join(resultsDirectory, "invalid-timestamp-order.json"),
-    JSON.stringify(trial),
-    "utf-8",
-  );
+    writeFileSync(
+      path.join(resultsDirectory, "invalid-timestamp-order.json"),
+      JSON.stringify(trial),
+      "utf-8",
+    );
 
-  const warningSpy = vi.spyOn(console, "warn");
+    const warningSpy = vi.spyOn(console, "warn");
 
-  try {
-    const records = loadTrialRecords(resultsDirectory);
+    try {
+      const records = loadTrialRecords(resultsDirectory);
 
-    expect(records).toEqual([]);
-    expect(warningSpy).toHaveBeenCalledOnce();
-  } finally {
-    warningSpy.mockRestore();
-  }
-});
+      expect(records).toEqual([]);
+      expect(warningSpy).toHaveBeenCalledOnce();
+    } finally {
+      warningSpy.mockRestore();
+    }
+  });
 
   it("should load only trial records matching the requested run ID", () => {
     const resultsDirectory = createTemporaryDirectory();

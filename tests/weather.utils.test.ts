@@ -32,7 +32,7 @@ describe("Weather Restricted Voyage", () => {
 
     expect(result.restricted_distance_nm).toBe(24);
     expect(result.normal_distance_nm).toBe(36);
-   expect(result.total_travel_hours).toBe(7);
+    expect(result.total_travel_hours).toBe(7);
   });
 
   it("should not apply restriction if vessel arrives exactly when it starts", () => {
@@ -63,16 +63,11 @@ describe("Weather Restricted Voyage", () => {
 
   it("should reject an invalid restriction period", () => {
     expect(() =>
-      calculateWeatherRestrictedVoyage(
-        "2026-10-15T08:00:00Z",
-        180,
-        12,
-        {
-          start_time: "2026-10-15T16:00:00Z",
-          end_time: "2026-10-15T12:00:00Z",
-          restricted_speed_kn: 6,
-        },
-      ),
+      calculateWeatherRestrictedVoyage("2026-10-15T08:00:00Z", 180, 12, {
+        start_time: "2026-10-15T16:00:00Z",
+        end_time: "2026-10-15T12:00:00Z",
+        restricted_speed_kn: 6,
+      }),
     ).toThrow();
   });
 });

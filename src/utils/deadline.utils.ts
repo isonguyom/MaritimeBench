@@ -12,10 +12,7 @@ export function calculateDeadlineFeasibility(
   const etaTimestamp = new Date(physicalEta).getTime();
   const deadlineTimestamp = new Date(deadline).getTime();
 
-  if (
-    !Number.isFinite(etaTimestamp) ||
-    !Number.isFinite(deadlineTimestamp)
-  ) {
+  if (!Number.isFinite(etaTimestamp) || !Number.isFinite(deadlineTimestamp)) {
     throw new Error("Invalid physical ETA or deadline.");
   }
 

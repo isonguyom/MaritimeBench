@@ -1,7 +1,4 @@
-export function addHoursToDate(
-  date: string,
-  hours: number,
-): string {
+export function addHoursToDate(date: string, hours: number): string {
   const timestamp = new Date(date).getTime();
 
   const updatedTimestamp = timestamp + hours * 60 * 60 * 1000;

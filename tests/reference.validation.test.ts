@@ -37,6 +37,12 @@ describe("Reference calculation validation", () => {
     expect(result.task_id).toBe(reference.task_id);
     expect(result.status).toBe(reference.status);
 
+    if (reference.waiting_hours === null) {
+      expect(result.waiting_hours).toBeNull();
+    } else {
+      expect(result.waiting_hours).toBeCloseTo(reference.waiting_hours, 2);
+    }
+
     if (result.status === "insufficient_information") {
       expect(result.missing_inputs).toEqual(reference.missing_inputs);
       expect(result.physical_eta).toBeNull();
@@ -58,10 +64,6 @@ describe("Reference calculation validation", () => {
       );
     } else {
       expect(result.permitted_arrival).toBeNull();
-    }
-
-    if (reference.waiting_hours !== null) {
-      expect(result.waiting_hours).toBeCloseTo(reference.waiting_hours, 2);
     }
 
     expect(result.deadline_feasible).toBe(reference.deadline_feasible);

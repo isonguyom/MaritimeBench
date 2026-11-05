@@ -28,11 +28,9 @@ export function calculatePortArrival(
     throw new Error("Invalid port receiving window.");
   }
 
-  const openingMinutes =
-    Number(openingMatch[1]) * 60 + Number(openingMatch[2]);
+  const openingMinutes = Number(openingMatch[1]) * 60 + Number(openingMatch[2]);
 
-  const closingMinutes =
-    Number(closingMatch[1]) * 60 + Number(closingMatch[2]);
+  const closingMinutes = Number(closingMatch[1]) * 60 + Number(closingMatch[2]);
 
   if (openingMinutes > closingMinutes) {
     throw new Error("Overnight port windows are not supported.");
@@ -60,8 +58,7 @@ export function calculatePortArrival(
     );
   }
 
-  const waitingHours =
-    (permittedArrival.getTime() - eta.getTime()) / 3_600_000;
+  const waitingHours = (permittedArrival.getTime() - eta.getTime()) / 3_600_000;
 
   return {
     physical_eta: eta.toISOString(),

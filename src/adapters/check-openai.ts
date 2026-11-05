@@ -22,9 +22,7 @@ async function main(): Promise<void> {
   console.log("API authentication: successful");
   console.log(`Configured model: ${model}`);
 
-  const modelAvailable = response.data.some(
-    (item) => item.id === model,
-  );
+  const modelAvailable = response.data.some((item) => item.id === model);
 
   console.log(
     `Model listed for this API key: ${modelAvailable ? "Yes" : "No"}`,

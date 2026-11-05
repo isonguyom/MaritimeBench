@@ -25,12 +25,12 @@ describe("loadEvaluationData", () => {
   });
 
   it("should load all eight benchmark tasks and matching references", () => {
-  for (let number = 1; number <= 8; number++) {
-    const taskId = `MB-${String(number).padStart(2, "0")}`;
-    const result = loadEvaluationData(taskId);
+    for (let number = 1; number <= 8; number++) {
+      const taskId = `MB-${String(number).padStart(2, "0")}`;
+      const result = loadEvaluationData(taskId);
 
-    expect(result.task.task_id).toBe(taskId);
-    expect(result.reference.task_id).toBe(taskId);
-  }
-});
+      expect(result.task.task_id).toBe(taskId);
+      expect(result.reference.task_id).toBe(taskId);
+    }
+  });
 });

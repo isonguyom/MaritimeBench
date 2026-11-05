@@ -44,10 +44,7 @@ describe("calculateDeadlineFeasibility", () => {
 
   it("should reject invalid timestamps", () => {
     expect(() =>
-      calculateDeadlineFeasibility(
-        "invalid-date",
-        "2026-10-16T01:00:00Z",
-      ),
+      calculateDeadlineFeasibility("invalid-date", "2026-10-16T01:00:00Z"),
     ).toThrow("Invalid physical ETA or deadline.");
   });
 });

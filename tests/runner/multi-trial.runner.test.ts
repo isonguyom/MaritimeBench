@@ -1,4 +1,3 @@
-
 import { describe, expect, it, vi } from "vitest";
 
 import type {
@@ -28,16 +27,14 @@ function createMockAdapter(): ModelAdapter & {
   return {
     provider: "mock",
 
-    generate: vi.fn(
-      async (_request: ModelRequest): Promise<ModelResponse> => ({
-        provider: "mock",
-        model: "mock-model",
-        content: JSON.stringify(response),
-        latencyMs: 100,
-        inputTokens: 100,
-        outputTokens: 50,
-      }),
-    ),
+    generate: vi.fn(async (_request: ModelRequest): Promise<ModelResponse> => ({
+      provider: "mock",
+      model: "mock-model",
+      content: JSON.stringify(response),
+      latencyMs: 100,
+      inputTokens: 100,
+      outputTokens: 50,
+    })),
   };
 }
 
@@ -56,21 +53,17 @@ describe("runMultipleTrials", () => {
     expect(result.total_trials).toBe(3);
     expect(result.results).toHaveLength(3);
 
-    expect(
-      result.results.map((trial) => trial.trial_number),
-    ).toEqual([1, 2, 3]);
+    expect(result.results.map((trial) => trial.trial_number)).toEqual([
+      1, 2, 3,
+    ]);
 
     expect(
-      result.results.every(
-        (trial) => trial.run_id === "experiment-001",
-      ),
+      result.results.every((trial) => trial.run_id === "experiment-001"),
     ).toBe(true);
 
-    expect(
-      result.results.every(
-        (trial) => trial.grading.score === 100,
-      ),
-    ).toBe(true);
+    expect(result.results.every((trial) => trial.grading.score === 100)).toBe(
+      true,
+    );
 
     expect(adapter.generate).toHaveBeenCalledTimes(3);
   });
@@ -86,14 +79,10 @@ describe("runMultipleTrials", () => {
     expect(result.run_id).toBeTruthy();
 
     expect(
-      result.results.every(
-        (trial) => trial.run_id === result.run_id,
-      ),
+      result.results.every((trial) => trial.run_id === result.run_id),
     ).toBe(true);
 
-    expect(
-      result.results.map((trial) => trial.trial_number),
-    ).toEqual([1, 2]);
+    expect(result.results.map((trial) => trial.trial_number)).toEqual([1, 2]);
   });
 
   it("should reject zero or invalid trial counts", async () => {

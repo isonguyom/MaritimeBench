@@ -21,9 +21,7 @@ describe("OpenAIAdapter", () => {
   });
 
   it("should reject a missing API key", () => {
-    expect(() => new OpenAIAdapter("")).toThrow(
-      "OpenAI API key is missing.",
-    );
+    expect(() => new OpenAIAdapter("")).toThrow("OpenAI API key is missing.");
   });
 
   it("should send a request and capture the model response", async () => {

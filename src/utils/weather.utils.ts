@@ -48,8 +48,7 @@ export function calculateWeatherRestrictedVoyage(
 
   // Travel normally until the restriction starts.
   if (currentTime < restrictionStart) {
-    const availableHours =
-      (restrictionStart - currentTime) / 3_600_000;
+    const availableHours = (restrictionStart - currentTime) / 3_600_000;
 
     const possibleDistance = availableHours * normalSpeedKn;
 
@@ -61,8 +60,7 @@ export function calculateWeatherRestrictedVoyage(
     normalDistance += distanceBeforeRestriction;
     remainingDistance -= distanceBeforeRestriction;
 
-    currentTime +=
-      (distanceBeforeRestriction / normalSpeedKn) * 3_600_000;
+    currentTime += (distanceBeforeRestriction / normalSpeedKn) * 3_600_000;
   }
 
   // Apply the restricted speed while the restriction is active.
@@ -71,8 +69,7 @@ export function calculateWeatherRestrictedVoyage(
     currentTime >= restrictionStart &&
     currentTime < restrictionEnd
   ) {
-    const availableRestrictedHours =
-      (restrictionEnd - currentTime) / 3_600_000;
+    const availableRestrictedHours = (restrictionEnd - currentTime) / 3_600_000;
 
     const possibleRestrictedDistance =
       availableRestrictedHours * restriction.restricted_speed_kn;
@@ -86,9 +83,7 @@ export function calculateWeatherRestrictedVoyage(
     remainingDistance -= distanceUnderRestriction;
 
     currentTime +=
-      (distanceUnderRestriction /
-        restriction.restricted_speed_kn) *
-      3_600_000;
+      (distanceUnderRestriction / restriction.restricted_speed_kn) * 3_600_000;
   }
 
   // Resume normal speed after the restriction ends.
@@ -99,14 +94,12 @@ export function calculateWeatherRestrictedVoyage(
 
     normalDistance += remainingDistance;
 
-    currentTime +=
-      (remainingDistance / normalSpeedKn) * 3_600_000;
+    currentTime += (remainingDistance / normalSpeedKn) * 3_600_000;
   }
 
   const arrivalTime = new Date(currentTime).toISOString();
 
-  const totalTravelHours =
-    (currentTime - departure) / 3_600_000;
+  const totalTravelHours = (currentTime - departure) / 3_600_000;
 
   return {
     total_travel_hours: totalTravelHours,

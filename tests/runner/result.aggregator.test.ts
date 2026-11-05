@@ -233,69 +233,69 @@ describe("Result aggregator", () => {
   });
 
   it("should calculate median latency correctly for an even number of trials", () => {
-  const trials = [
-    createTrial({
-      trial_number: 1,
-      latency_ms: 1000,
-    }),
-    createTrial({
-      trial_number: 2,
-      latency_ms: 3000,
-    }),
-    createTrial({
-      trial_number: 3,
-      latency_ms: 2000,
-    }),
-    createTrial({
-      trial_number: 4,
-      latency_ms: 4000,
-    }),
-  ];
+    const trials = [
+      createTrial({
+        trial_number: 1,
+        latency_ms: 1000,
+      }),
+      createTrial({
+        trial_number: 2,
+        latency_ms: 3000,
+      }),
+      createTrial({
+        trial_number: 3,
+        latency_ms: 2000,
+      }),
+      createTrial({
+        trial_number: 4,
+        latency_ms: 4000,
+      }),
+    ];
 
-  const group: TaskTrialGroup = {
-    task_id: "MB-03",
-    provider: "mock",
-    model: "mock-model",
-    run_id: "run-001",
-    temperature: 0,
-    max_output_tokens: 1000,
-    trials,
-  };
+    const group: TaskTrialGroup = {
+      task_id: "MB-03",
+      provider: "mock",
+      model: "mock-model",
+      run_id: "run-001",
+      temperature: 0,
+      max_output_tokens: 1000,
+      trials,
+    };
 
-  const summary = aggregateTaskGroup(group, createTask());
+    const summary = aggregateTaskGroup(group, createTask());
 
-  expect(summary.median_latency_ms).toBe(2500);
-});
+    expect(summary.median_latency_ms).toBe(2500);
+  });
 
   it("should return null token averages when all token counts are missing", () => {
-  const trials = [
-    createTrial({
-      trial_number: 1,
-      input_tokens: undefined,
-      output_tokens: undefined,
-    }),
-    createTrial({
-      trial_number: 2,
-      input_tokens: undefined,
-      output_tokens: undefined,
-    }),
-  ];
+    const trials = [
+      createTrial({
+        trial_number: 1,
+        input_tokens: undefined,
+        output_tokens: undefined,
+      }),
+      createTrial({
+        trial_number: 2,
+        input_tokens: undefined,
+        output_tokens: undefined,
+      }),
+    ];
 
-  const group: TaskTrialGroup = {
-    task_id: "MB-03",
-    provider: "mock",
-    model: "mock-model",
-    run_id: "run-001",
-    temperature: 0,
-    max_output_tokens: 1000,
-    trials,
-  };
+    const group: TaskTrialGroup = {
+      task_id: "MB-03",
+      provider: "mock",
+      model: "mock-model",
+      run_id: "run-001",
+      temperature: 0,
+      max_output_tokens: 1000,
+      trials,
+    };
 
-  const summary = aggregateTaskGroup(group, createTask());
+    const summary = aggregateTaskGroup(group, createTask());
 
-  expect(summary.average_input_tokens).toBeNull();
-  expect(summary.average_output_tokens).toBeNull();
-});
+    expect(summary.average_input_tokens).toBeNull();
+    expect(summary.average_output_tokens).toBeNull();
+  });
 
   it("should return null constraint failure rate when no constraints are assessable", () => {
     const trial = createTrial({

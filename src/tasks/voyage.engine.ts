@@ -1,8 +1,5 @@
 import type { VoyageTask } from "../schemas/task.schema";
-import {
-  addHoursToDate,
-  calculateTravelHours,
-} from "../utils/time.utils";
+import { addHoursToDate, calculateTravelHours } from "../utils/time.utils";
 import { calculateWeatherRestrictedVoyage } from "../utils/weather.utils";
 import { calculatePortArrival } from "../utils/port.utils";
 import { calculateDeadlineFeasibility } from "../utils/deadline.utils";
@@ -19,9 +16,7 @@ export interface VoyageCalculationResult {
   missing_inputs: string[];
 }
 
-export function calculateVoyage(
-  task: VoyageTask,
-): VoyageCalculationResult {
+export function calculateVoyage(task: VoyageTask): VoyageCalculationResult {
   const missingInputs: string[] = [];
 
   for (const leg of task.legs) {
@@ -49,10 +44,7 @@ export function calculateVoyage(
   let physicalEta: string;
 
   if (task.weather_restrictions.length > 0) {
-    if (
-      task.legs.length !== 1 ||
-      task.weather_restrictions.length !== 1
-    ) {
+    if (task.legs.length !== 1 || task.weather_restrictions.length !== 1) {
       throw new Error(
         "Weather calculations currently support one leg and one restriction.",
       );
@@ -71,26 +63,17 @@ export function calculateVoyage(
     physicalEta = weatherResult.arrival_time;
   } else {
     for (const leg of task.legs) {
-      totalTravelHours += calculateTravelHours(
-        leg.distance_nm,
-        leg.speed_kn!,
-      );
+      totalTravelHours += calculateTravelHours(leg.distance_nm, leg.speed_kn!);
     }
 
-    physicalEta = addHoursToDate(
-      task.departure_time,
-      totalTravelHours,
-    );
+    physicalEta = addHoursToDate(task.departure_time, totalTravelHours);
   }
 
   let permittedArrival: string | null = null;
   let waitingHours: number | null = null;
 
   if (task.port_window) {
-    const portResult = calculatePortArrival(
-      physicalEta,
-      task.port_window,
-    );
+    const portResult = calculatePortArrival(physicalEta, task.port_window);
 
     permittedArrival = portResult.permitted_arrival;
     waitingHours = portResult.waiting_hours;

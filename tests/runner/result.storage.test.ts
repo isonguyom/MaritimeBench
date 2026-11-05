@@ -1,10 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import {
-  existsSync,
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-} from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
@@ -24,9 +19,7 @@ describe("saveEvaluationResult", () => {
   });
 
   it("saves an evaluation result as formatted JSON", () => {
-    temporaryDirectory = mkdtempSync(
-      path.join(os.tmpdir(), "maritimebench-"),
-    );
+    temporaryDirectory = mkdtempSync(path.join(os.tmpdir(), "maritimebench-"));
 
     process.chdir(temporaryDirectory);
 
@@ -50,9 +43,7 @@ describe("saveEvaluationResult", () => {
     };
 
     const savedPath = saveEvaluationResult(result);
-    const savedContent = JSON.parse(
-      readFileSync(savedPath, "utf-8"),
-    );
+    const savedContent = JSON.parse(readFileSync(savedPath, "utf-8"));
 
     expect(existsSync(savedPath)).toBe(true);
     expect(savedContent).toEqual(result);
@@ -60,9 +51,7 @@ describe("saveEvaluationResult", () => {
   });
 
   it("creates the results directory when it does not exist", () => {
-    temporaryDirectory = mkdtempSync(
-      path.join(os.tmpdir(), "maritimebench-"),
-    );
+    temporaryDirectory = mkdtempSync(path.join(os.tmpdir(), "maritimebench-"));
 
     process.chdir(temporaryDirectory);
 

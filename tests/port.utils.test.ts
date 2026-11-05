@@ -8,58 +8,40 @@ describe("calculatePortArrival", () => {
   };
 
   it("should allow arrival within the receiving window", () => {
-    const result = calculatePortArrival(
-      "2026-10-15T20:00:00Z",
-      window,
-    );
+    const result = calculatePortArrival("2026-10-15T20:00:00Z", window);
 
     expect(result.permitted_arrival).toBe("2026-10-15T20:00:00.000Z");
     expect(result.waiting_hours).toBe(0);
   });
 
   it("should wait until the next opening when arrival is after closing", () => {
-    const result = calculatePortArrival(
-      "2026-10-15T23:00:00Z",
-      window,
-    );
+    const result = calculatePortArrival("2026-10-15T23:00:00Z", window);
 
     expect(result.permitted_arrival).toBe("2026-10-16T18:00:00.000Z");
     expect(result.waiting_hours).toBe(19);
   });
 
   it("should wait until opening when arrival is before the window", () => {
-    const result = calculatePortArrival(
-      "2026-10-15T16:00:00Z",
-      window,
-    );
+    const result = calculatePortArrival("2026-10-15T16:00:00Z", window);
 
     expect(result.permitted_arrival).toBe("2026-10-15T18:00:00.000Z");
     expect(result.waiting_hours).toBe(2);
   });
 
   it("should accept arrival exactly at opening", () => {
-    const result = calculatePortArrival(
-      "2026-10-15T18:00:00Z",
-      window,
-    );
+    const result = calculatePortArrival("2026-10-15T18:00:00Z", window);
 
     expect(result.waiting_hours).toBe(0);
   });
 
   it("should accept arrival exactly at closing", () => {
-    const result = calculatePortArrival(
-      "2026-10-15T22:00:00Z",
-      window,
-    );
+    const result = calculatePortArrival("2026-10-15T22:00:00Z", window);
 
     expect(result.waiting_hours).toBe(0);
   });
 
   it("should wait until the next opening one minute after closing", () => {
-    const result = calculatePortArrival(
-      "2026-10-15T22:01:00Z",
-      window,
-    );
+    const result = calculatePortArrival("2026-10-15T22:01:00Z", window);
 
     expect(result.permitted_arrival).toBe("2026-10-16T18:00:00.000Z");
     expect(result.waiting_hours).toBe(19 + 59 / 60);

@@ -5,9 +5,7 @@ export interface EvaluationPrompt {
   userPrompt: string;
 }
 
-export function buildEvaluationPrompt(
-  task: VoyageTask,
-): EvaluationPrompt {
+export function buildEvaluationPrompt(task: VoyageTask): EvaluationPrompt {
   const systemPrompt = `
 You are an AI assistant being evaluated on operational voyage planning.
 
