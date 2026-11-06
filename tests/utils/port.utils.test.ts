@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { calculatePortArrival } from "../src/utils/port.utils";
+import { calculatePortArrival } from "../../src/utils/port.utils";
 
 describe("calculatePortArrival", () => {
   const window = {

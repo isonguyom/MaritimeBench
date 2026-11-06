@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { calculateDeadlineFeasibility } from "../src/utils/deadline.utils";
+import { calculateDeadlineFeasibility } from "../../src/utils/deadline.utils";
 
 describe("calculateDeadlineFeasibility", () => {
   it("should mark an early arrival as feasible", () => {

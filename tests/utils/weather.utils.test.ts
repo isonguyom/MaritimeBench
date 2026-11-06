@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { calculateWeatherRestrictedVoyage } from "../src/utils/weather.utils";
+import { calculateWeatherRestrictedVoyage } from "../../src/utils/weather.utils";
 
 describe("Weather Restricted Voyage", () => {
   const restriction = {

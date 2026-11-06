@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addHoursToDate, calculateTravelHours } from "../src/utils/time.utils";
+import { addHoursToDate, calculateTravelHours } from "../../src/utils/time.utils";
 
 describe("Time Utilities", () => {
   describe("calculateTravelHours", () => {
