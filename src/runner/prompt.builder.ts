@@ -1,11 +1,11 @@
-import type { VoyageTask } from "../schemas/task.schema";
+import type { VoyageTaskInput } from "../schemas/task.schema";
 
 export interface EvaluationPrompt {
   systemPrompt: string;
   userPrompt: string;
 }
 
-export function buildEvaluationPrompt(task: VoyageTask): EvaluationPrompt {
+export function buildEvaluationPrompt(task: VoyageTaskInput): EvaluationPrompt {
   const systemPrompt = `
 You are an AI assistant being evaluated on operational voyage planning.
 
@@ -36,7 +36,7 @@ Follow these rules strictly.
 3. The restriction end time is exclusive.
 4. Use the restricted speed during the applicable restriction period.
 5. Use the normal vessel speed before the restriction starts and after it ends.
-6. Calculate the distance travelled during each speed interval separately.
+6. Calculate the distance traveled during each speed interval separately.
 7. Do not apply a weather restriction to time spent waiting at port.
 8. Do not assume that a restriction affects the entire voyage unless the supplied times establish that.
 
@@ -67,8 +67,10 @@ Follow these rules strictly.
 3. Identify every missing required input in missing_inputs.
 4. When a required input is missing and the calculation cannot be completed, return null for the affected calculation fields.
 5. If an input is invalid, return invalid_input.
-6. Distances and speeds must be greater than zero.
-7. Restriction end time must be later than restriction start time.
+6. Identify every invalid input in invalid_inputs using its exact field path from the supplied task data.
+7. Distances and speeds must be greater than zero.
+8. Restriction end time must be later than restriction start time.
+9. Do not include invalid inputs in missing_inputs.
 
 ## 7. Output requirements
 
@@ -85,6 +87,7 @@ Use all the following fields:
   "waiting_hours": "number or null",
   "deadline_feasible": "boolean or null",
   "missing_inputs": ["string"],
+  "invalid_inputs": ["string"],
   "assumptions": ["string"],
   "explanation": "string"
 }
@@ -93,7 +96,7 @@ Additional output rules:
 
 1. Include every field, even when its value is null or an empty array.
 2. Use null when a field is not applicable or cannot be determined.
-3. Use an empty array when there are no missing inputs or assumptions.
+3. Use an empty array when there are no missing inputs, invalid inputs, or assumptions.
 4. Do not add fields outside the specified JSON structure.
 5. Explain the calculations clearly, including relevant speed intervals, waiting time, and deadline assessment.
 6. State only assumptions that are necessary and supported by the supplied information.

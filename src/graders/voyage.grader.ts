@@ -1,6 +1,6 @@
 import { VoyageResponseSchema } from "../schemas/response.schema";
 import type { VoyageResponse } from "../schemas/response.schema";
-import type { VoyageTask } from "../schemas/task.schema";
+import type { VoyageTaskInput } from "../schemas/task.schema";
 
 export type GradingCategory =
   | "response_integrity"
@@ -35,7 +35,7 @@ const HOURS_TOLERANCE = 1 / 60;
 
 export function gradeVoyageResponse(
   responseData: unknown,
-  task: VoyageTask,
+  task: VoyageTaskInput,
   reference: VoyageResponse,
 ): GradingResult {
   // Prevent grading a response against the wrong task reference.
@@ -138,6 +138,18 @@ export function gradeVoyageResponse(
     actualMissingInputs,
   );
 
+  const expectedInvalidInputs = [...reference.invalid_inputs].sort();
+  const actualInvalidInputs = [...response.invalid_inputs].sort();
+
+  addCheck(
+    "invalid_inputs",
+    ["information_handling"],
+    JSON.stringify(actualInvalidInputs) ===
+      JSON.stringify(expectedInvalidInputs),
+    expectedInvalidInputs,
+    actualInvalidInputs,
+  );
+
   // Only grade voyage calculations when the reference expects completion.
   if (reference.status === "completed") {
     addCheck(
@@ -196,6 +208,50 @@ export function gradeVoyageResponse(
 
   // When required information is missing, the model must not invent calculations.
   if (reference.status === "insufficient_information") {
+    addCheck(
+      "total_travel_hours",
+      ["information_handling"],
+      response.total_travel_hours === null,
+      null,
+      response.total_travel_hours,
+    );
+
+    addCheck(
+      "physical_eta",
+      ["information_handling"],
+      response.physical_eta === null,
+      null,
+      response.physical_eta,
+    );
+
+    addCheck(
+      "permitted_arrival",
+      ["information_handling"],
+      response.permitted_arrival === null,
+      null,
+      response.permitted_arrival,
+    );
+
+    addCheck(
+      "waiting_hours",
+      ["information_handling"],
+      response.waiting_hours === null,
+      null,
+      response.waiting_hours,
+    );
+
+    addCheck(
+      "deadline_feasible",
+      ["information_handling"],
+      response.deadline_feasible === null,
+      null,
+      response.deadline_feasible,
+    );
+  }
+
+  // When task inputs are invalid, the model must identify them
+  // and must not produce voyage calculations.
+  if (reference.status === "invalid_input") {
     addCheck(
       "total_travel_hours",
       ["information_handling"],

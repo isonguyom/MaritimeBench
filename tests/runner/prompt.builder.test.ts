@@ -59,4 +59,24 @@ describe("Evaluation prompt builder", () => {
     expect(result.userPrompt).not.toContain("reference");
     expect(result.userPrompt).not.toContain("expected outcome");
   });
+
+  it("should include invalid-input handling instructions", () => {
+    const result = buildEvaluationPrompt(task);
+
+    expect(result.systemPrompt).toContain(
+      "If an input is invalid, return invalid_input",
+    );
+    expect(result.systemPrompt).toContain("invalid_inputs");
+    expect(result.systemPrompt).toContain("exact field path");
+    expect(result.systemPrompt).toContain("greater than zero");
+    expect(result.systemPrompt).toContain(
+      "Restriction end time must be later than restriction start time",
+    );
+  });
+
+  it("should include invalid_inputs in the required JSON response fields", () => {
+    const result = buildEvaluationPrompt(task);
+
+    expect(result.systemPrompt).toContain('"invalid_inputs"');
+  });
 });

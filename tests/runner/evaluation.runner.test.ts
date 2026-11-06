@@ -38,6 +38,7 @@ describe("runEvaluation", () => {
       waiting_hours: null,
       deadline_feasible: null,
       missing_inputs: [],
+      invalid_inputs: [],
       assumptions: [],
       explanation:
         "The vessel travels 240 nautical miles at 12 knots. Travel time is 20 hours.",
@@ -155,6 +156,7 @@ describe("runEvaluation", () => {
       waiting_hours: null,
       deadline_feasible: null,
       missing_inputs: [],
+      invalid_inputs: [],
       assumptions: [],
       explanation: "Travel time is 240 / 12 = 20 hours.",
     };

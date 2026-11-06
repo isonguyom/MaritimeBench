@@ -7,6 +7,7 @@
   "waiting_hours": 0,
   "deadline_feasible": null,
   "missing_inputs": [],
+  "invalid_inputs": [],
   "assumptions": [],
   "explanation": "The vessel travels 120 nautical miles at 10 knots, taking 12 hours. Departing at 08:00 UTC gives a physical ETA of 20:00 UTC. This falls within the port's inclusive receiving window of 18:00 to 22:00 UTC, so no waiting time is required."
 }

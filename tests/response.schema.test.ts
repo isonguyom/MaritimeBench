@@ -11,6 +11,7 @@ describe("VoyageResponseSchema", () => {
     waiting_hours: null,
     deadline_feasible: null,
     missing_inputs: [],
+    invalid_inputs: [],
     assumptions: [],
     explanation: "Distance divided by speed: 240 / 12 = 20 hours.",
   };
@@ -191,5 +192,34 @@ describe("VoyageResponseSchema", () => {
     };
 
     expect(VoyageResponseSchema.safeParse(response).success).toBe(true);
+  });
+
+  it("should accept a valid invalid-input response", () => {
+    const response = {
+      ...validResponse,
+      task_id: "MB-09",
+      status: "invalid_input",
+      total_travel_hours: null,
+      physical_eta: null,
+      invalid_inputs: ["legs[0].speed_kn", "weather_restrictions[0].end_time"],
+    };
+
+    expect(VoyageResponseSchema.safeParse(response).success).toBe(true);
+  });
+
+  it("should reject a response without invalid_inputs", () => {
+    const response = { ...validResponse } as Record<string, unknown>;
+    delete response.invalid_inputs;
+
+    expect(VoyageResponseSchema.safeParse(response).success).toBe(false);
+  });
+
+  it("should reject an empty invalid_inputs entry", () => {
+    const response = {
+      ...validResponse,
+      invalid_inputs: [" "],
+    };
+
+    expect(VoyageResponseSchema.safeParse(response).success).toBe(false);
   });
 });

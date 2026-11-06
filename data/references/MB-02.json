@@ -7,6 +7,7 @@
   "waiting_hours": null,
   "deadline_feasible": null,
   "missing_inputs": [],
+  "invalid_inputs": [],
   "assumptions": [],
   "explanation": "The vessel completes two consecutive legs. LEG-01 takes 120 / 12 = 10 hours. LEG-02 takes 240 / 12 = 20 hours. Total travel time is 30 hours, giving a final physical ETA of 2026-10-16T12:00:00Z."
 }

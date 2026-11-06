@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
-import { VoyageTaskSchema } from "../src/schemas/task.schema";
+import {
+  InvalidVoyageTaskSchema,
+  VoyageTaskSchema,
+} from "../src/schemas/task.schema";
 
 describe("VoyageTaskSchema", () => {
   const validTask = JSON.parse(readFileSync("data/tasks/MB-03.json", "utf-8"));
@@ -232,5 +235,43 @@ describe("VoyageTaskSchema", () => {
         expect(VoyageTaskSchema.safeParse(task).success).toBe(false);
       },
     );
+  });
+});
+
+describe("InvalidVoyageTaskSchema", () => {
+  const invalidTask = JSON.parse(
+    readFileSync("data/tasks/MB-09.json", "utf-8"),
+  );
+
+  it("should accept the MB-09 task containing multiple invalid inputs", () => {
+    expect(InvalidVoyageTaskSchema.safeParse(invalidTask).success).toBe(true);
+  });
+
+  it("should accept a zero vessel speed for invalid-input evaluation", () => {
+    const task = structuredClone(invalidTask);
+    task.legs[0].speed_kn = 0;
+
+    expect(InvalidVoyageTaskSchema.safeParse(task).success).toBe(true);
+  });
+
+  it("should accept a weather restriction ending before it starts", () => {
+    const task = structuredClone(invalidTask);
+    task.weather_restrictions[0].end_time = "2026-10-15T18:00:00Z";
+
+    expect(InvalidVoyageTaskSchema.safeParse(task).success).toBe(true);
+  });
+
+  it("should still reject a non-positive distance", () => {
+    const task = structuredClone(invalidTask);
+    task.legs[0].distance_nm = 0;
+
+    expect(InvalidVoyageTaskSchema.safeParse(task).success).toBe(false);
+  });
+
+  it("should still reject a non-positive restricted speed", () => {
+    const task = structuredClone(invalidTask);
+    task.weather_restrictions[0].restricted_speed_kn = 0;
+
+    expect(InvalidVoyageTaskSchema.safeParse(task).success).toBe(false);
   });
 });

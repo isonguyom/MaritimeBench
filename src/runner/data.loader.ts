@@ -1,7 +1,11 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
-import { VoyageTaskSchema, type VoyageTask } from "../schemas/task.schema";
+import {
+  VoyageTaskSchema,
+  InvalidVoyageTaskSchema,
+  type VoyageTaskInput,
+} from "../schemas/task.schema";
 
 import {
   VoyageResponseSchema,
@@ -9,7 +13,7 @@ import {
 } from "../schemas/response.schema";
 
 export interface EvaluationData {
-  task: VoyageTask;
+  task: VoyageTaskInput;
   reference: VoyageResponse;
 }
 
@@ -51,7 +55,10 @@ export function loadEvaluationData(taskId: string): EvaluationData {
     );
   }
 
-  const taskResult = VoyageTaskSchema.safeParse(rawTask);
+  const taskResult =
+    taskId === "MB-09"
+      ? InvalidVoyageTaskSchema.safeParse(rawTask)
+      : VoyageTaskSchema.safeParse(rawTask);
 
   if (!taskResult.success) {
     throw new Error(

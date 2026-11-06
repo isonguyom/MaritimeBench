@@ -7,6 +7,7 @@
   "waiting_hours": null,
   "deadline_feasible": false,
   "missing_inputs": [],
+  "invalid_inputs": [],
   "assumptions": [],
   "explanation": "The vessel travels 240 nautical miles at 12 knots, taking 20 hours. Departing at 06:00 UTC on 15 October gives a physical ETA of 02:00 UTC on 16 October. The hard deadline is 01:00 UTC, so the vessel arrives one hour late and the deadline is infeasible."
 }

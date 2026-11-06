@@ -7,6 +7,7 @@
   "waiting_hours": 19,
   "deadline_feasible": null,
   "missing_inputs": [],
+  "invalid_inputs": [],
   "assumptions": [],
   "explanation": "The vessel travels 180 nautical miles at 12 knots, taking 15 hours. Departing at 08:00 UTC gives a physical ETA of 23:00 UTC on 15 October. The port receiving window closes at 22:00 UTC, so the vessel misses it. The next opening is 18:00 UTC on 16 October. The required waiting time is 19 hours."
 }

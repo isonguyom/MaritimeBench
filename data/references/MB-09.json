@@ -1,0 +1,16 @@
+{
+  "task_id": "MB-09",
+  "status": "invalid_input",
+  "total_travel_hours": null,
+  "physical_eta": null,
+  "permitted_arrival": null,
+  "waiting_hours": null,
+  "deadline_feasible": null,
+  "missing_inputs": [],
+  "invalid_inputs": [
+    "legs[0].speed_kn",
+    "weather_restrictions[0].end_time"
+  ],
+  "assumptions": [],
+  "explanation": "The vessel speed is zero, but speed must be greater than zero. The weather restriction ends before it starts. Both inputs are invalid, so voyage calculations cannot be performed."
+}

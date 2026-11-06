@@ -19,6 +19,8 @@ export const VoyageResponseSchema = z.object({
 
   missing_inputs: z.array(nonEmptyString),
 
+  invalid_inputs: z.array(nonEmptyString),
+
   assumptions: z.array(nonEmptyString),
 
   explanation: nonEmptyString,

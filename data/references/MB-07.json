@@ -1,14 +1,19 @@
 {
-  "task_id": "MB-07",
-  "status": "insufficient_information",
-  "total_travel_hours": null,
-  "physical_eta": null,
-  "permitted_arrival": null,
-  "waiting_hours": null,
-  "deadline_feasible": null,
-  "missing_inputs": [
-    "vessel_speed"
-  ],
-  "assumptions": [],
-  "explanation": "The vessel's speed is missing. Although the voyage distance and departure time are provided, the travel duration and physical ETA cannot be calculated without a vessel speed. The model must identify the missing input and request clarification rather than inventing a speed."
+    "task_id":  "MB-07",
+    "status":  "insufficient_information",
+    "total_travel_hours":  null,
+    "physical_eta":  null,
+    "permitted_arrival":  null,
+    "waiting_hours":  null,
+    "deadline_feasible":  null,
+    "missing_inputs":  [
+                           "vessel_speed"
+                       ],
+    "assumptions":  [
+
+                    ],
+    "explanation":  "The vessel\u0027s speed is missing. Although the voyage distance and departure time are provided, the travel duration and physical ETA cannot be calculated without a vessel speed. The model must identify the missing input and request clarification rather than inventing a speed.",
+    "invalid_inputs":  [
+
+                       ]
 }

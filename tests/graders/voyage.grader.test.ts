@@ -28,6 +28,7 @@ const reference: VoyageResponse = {
   waiting_hours: null,
   deadline_feasible: null,
   missing_inputs: [],
+  invalid_inputs: [],
   assumptions: [],
   explanation: "The vessel travels 240 nautical miles at 12 knots.",
 };
@@ -158,6 +159,7 @@ describe("Voyage response grader", () => {
       waiting_hours: null,
       deadline_feasible: null,
       missing_inputs: ["vessel_speed"],
+      invalid_inputs: [],
       assumptions: [],
       explanation: "Vessel speed is required to calculate the ETA.",
     };
@@ -216,6 +218,7 @@ describe("Voyage response grader", () => {
       waiting_hours: 19,
       deadline_feasible: null,
       missing_inputs: [],
+      invalid_inputs: [],
       assumptions: [],
       explanation: "The vessel waits for the next receiving window.",
     };
@@ -259,6 +262,7 @@ describe("Voyage response grader", () => {
       waiting_hours: null,
       deadline_feasible: false,
       missing_inputs: [],
+      invalid_inputs: [],
       assumptions: [],
       explanation: "The vessel arrives one hour after the deadline.",
     };
@@ -311,6 +315,7 @@ describe("Voyage response grader", () => {
       waiting_hours: null,
       deadline_feasible: null,
       missing_inputs: [],
+      invalid_inputs: [],
       assumptions: [],
       explanation:
         "The vessel travels at reduced speed during the restriction.",
@@ -374,6 +379,7 @@ describe("Voyage response grader", () => {
       waiting_hours: null,
       deadline_feasible: null,
       missing_inputs: ["vessel_speed"],
+      invalid_inputs: [],
       assumptions: [],
       explanation: "Vessel speed is required to calculate the ETA.",
     };
@@ -431,6 +437,7 @@ describe("Voyage response grader", () => {
       waiting_hours: 17,
       deadline_feasible: null,
       missing_inputs: [],
+      invalid_inputs: [],
       assumptions: [],
       explanation:
         "The vessel travels at reduced speed during the weather restriction and waits for the next port receiving window.",
@@ -483,6 +490,7 @@ describe("Voyage response grader", () => {
       waiting_hours: 17,
       deadline_feasible: null,
       missing_inputs: [],
+      invalid_inputs: [],
       assumptions: [],
       explanation: "The vessel waits for the next port receiving window.",
     };
@@ -534,6 +542,7 @@ describe("Voyage response grader", () => {
       waiting_hours: null,
       deadline_feasible: null,
       missing_inputs: [],
+      invalid_inputs: [],
       assumptions: [],
       explanation: "The two legs take 10 and 20 hours respectively.",
     };
@@ -582,6 +591,7 @@ describe("Voyage response grader", () => {
       waiting_hours: null,
       deadline_feasible: true,
       missing_inputs: [],
+      invalid_inputs: [],
       assumptions: [],
       explanation: "The vessel arrives exactly at the deadline.",
     };
@@ -624,6 +634,7 @@ describe("Voyage response grader", () => {
       waiting_hours: null,
       deadline_feasible: false,
       missing_inputs: [],
+      invalid_inputs: [],
       assumptions: [],
       explanation: "The vessel arrives one minute after the deadline.",
     };
@@ -686,6 +697,7 @@ describe("Voyage response grader", () => {
       waiting_hours: 19,
       deadline_feasible: null,
       missing_inputs: [],
+      invalid_inputs: [],
       assumptions: [],
       explanation: "The vessel waits for the next receiving window.",
     };
@@ -723,6 +735,7 @@ describe("Voyage response grader", () => {
       waiting_hours: 19,
       deadline_feasible: null,
       missing_inputs: [],
+      invalid_inputs: [],
       assumptions: [],
       explanation: "The vessel waits for the next receiving window.",
     };
@@ -735,5 +748,84 @@ describe("Voyage response grader", () => {
     const result = gradeVoyageResponse(response, portTask, portReference);
 
     expect(result.task_passed).toBe(false);
+  });
+
+  it("should correctly grade MB-09 with multiple invalid inputs", () => {
+    const invalidTask = {
+      task_id: "MB-09",
+      title: "Multiple Invalid Voyage Inputs",
+      description: "Identify all invalid inputs before calculations.",
+      departure_time: "2026-10-15T06:00:00Z",
+      legs: [{ leg_id: "LEG-01", distance_nm: 240, speed_kn: 0 }],
+      weather_restrictions: [
+        {
+          start_time: "2026-10-15T20:00:00Z",
+          end_time: "2026-10-15T18:00:00Z",
+          restricted_speed_kn: 6,
+        },
+      ],
+    };
+
+    const invalidReference: VoyageResponse = {
+      task_id: "MB-09",
+      status: "invalid_input",
+      total_travel_hours: null,
+      physical_eta: null,
+      permitted_arrival: null,
+      waiting_hours: null,
+      deadline_feasible: null,
+      missing_inputs: [],
+      invalid_inputs: ["legs[0].speed_kn", "weather_restrictions[0].end_time"],
+      assumptions: [],
+      explanation: "Both inputs are invalid.",
+    };
+
+    const response = {
+      ...invalidReference,
+      invalid_inputs: ["weather_restrictions[0].end_time", "legs[0].speed_kn"],
+    };
+
+    const result = gradeVoyageResponse(response, invalidTask, invalidReference);
+
+    expect(result.score).toBe(100);
+    expect(result.task_passed).toBe(true);
+    expect(result.valid_response).toBe(true);
+
+    const missingInvalidInput = gradeVoyageResponse(
+      {
+        ...response,
+        invalid_inputs: ["legs[0].speed_kn"],
+      },
+      invalidTask,
+      invalidReference,
+    );
+
+    expect(missingInvalidInput.task_passed).toBe(false);
+
+    const extraInvalidInput = gradeVoyageResponse(
+      {
+        ...response,
+        invalid_inputs: [
+          "legs[0].speed_kn",
+          "weather_restrictions[0].end_time",
+          "legs[0].distance_nm",
+        ],
+      },
+      invalidTask,
+      invalidReference,
+    );
+
+    expect(extraInvalidInput.task_passed).toBe(false);
+
+    const inventedCalculation = gradeVoyageResponse(
+      {
+        ...response,
+        total_travel_hours: 20,
+      },
+      invalidTask,
+      invalidReference,
+    );
+
+    expect(inventedCalculation.task_passed).toBe(false);
   });
 });

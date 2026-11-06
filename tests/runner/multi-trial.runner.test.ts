@@ -20,6 +20,7 @@ function createMockAdapter(): ModelAdapter & {
     waiting_hours: null,
     deadline_feasible: null,
     missing_inputs: [],
+    invalid_inputs: [],
     assumptions: [],
     explanation: "Travel time is 240 / 12 = 20 hours.",
   };

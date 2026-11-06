@@ -10,6 +10,7 @@ const mockResponses: Record<string, VoyageResponse> = {
     waiting_hours: null,
     deadline_feasible: null,
     missing_inputs: [],
+    invalid_inputs: [],
     assumptions: [],
     explanation:
       "The vessel travels 240 nautical miles at 12 knots. Travel time is 240 / 12 = 20 hours.",
@@ -24,6 +25,7 @@ const mockResponses: Record<string, VoyageResponse> = {
     waiting_hours: null,
     deadline_feasible: null,
     missing_inputs: [],
+    invalid_inputs: [],
     assumptions: [],
     explanation:
       "LEG-01 takes 120 / 12 = 10 hours. LEG-02 takes 240 / 12 = 20 hours. Total travel time is 30 hours.",
@@ -38,6 +40,7 @@ const mockResponses: Record<string, VoyageResponse> = {
     waiting_hours: null,
     deadline_feasible: null,
     missing_inputs: [],
+    invalid_inputs: [],
     assumptions: [],
     explanation:
       "The vessel travels 48 nautical miles at 12 knots before the restriction, 24 nautical miles at 6 knots during the restriction, and the remaining 108 nautical miles at 12 knots. Total travel time is 17 hours.",
@@ -52,6 +55,7 @@ const mockResponses: Record<string, VoyageResponse> = {
     waiting_hours: 0,
     deadline_feasible: null,
     missing_inputs: [],
+    invalid_inputs: [],
     assumptions: [],
     explanation:
       "The vessel travels 120 nautical miles at 10 knots, taking 12 hours. Arrival at 20:00 UTC falls within the inclusive port window of 18:00 to 22:00 UTC.",
@@ -66,6 +70,7 @@ const mockResponses: Record<string, VoyageResponse> = {
     waiting_hours: 19,
     deadline_feasible: null,
     missing_inputs: [],
+    invalid_inputs: [],
     assumptions: [],
     explanation:
       "The vessel travels 180 nautical miles at 12 knots, taking 15 hours. It misses the port window closing at 22:00 UTC and must wait until the next opening at 18:00 UTC. Waiting time is 19 hours.",
@@ -80,6 +85,7 @@ const mockResponses: Record<string, VoyageResponse> = {
     waiting_hours: null,
     deadline_feasible: false,
     missing_inputs: [],
+    invalid_inputs: [],
     assumptions: [],
     explanation:
       "The vessel travels 240 nautical miles at 12 knots, taking 20 hours. Its physical ETA is 02:00 UTC, one hour after the 01:00 UTC hard deadline. The deadline is infeasible.",
@@ -94,6 +100,7 @@ const mockResponses: Record<string, VoyageResponse> = {
     waiting_hours: null,
     deadline_feasible: null,
     missing_inputs: ["vessel_speed"],
+    invalid_inputs: [],
     assumptions: [],
     explanation:
       "The vessel speed is missing. Travel duration and physical ETA cannot be calculated without it. Clarification is required.",
@@ -108,9 +115,25 @@ const mockResponses: Record<string, VoyageResponse> = {
     waiting_hours: 17,
     deadline_feasible: null,
     missing_inputs: [],
+    invalid_inputs: [],
     assumptions: [],
     explanation:
       "The vessel travels 48 nautical miles at 12 knots before the restriction, 24 nautical miles at 6 knots during the restriction, and the remaining 108 nautical miles at 12 knots. Physical ETA is 01:00 UTC. Since this falls outside the port's receiving window, the vessel waits until 18:00 UTC, resulting in 17 hours of waiting.",
+  },
+
+  "MB-09": {
+    task_id: "MB-09",
+    status: "invalid_input",
+    total_travel_hours: null,
+    physical_eta: null,
+    permitted_arrival: null,
+    waiting_hours: null,
+    deadline_feasible: null,
+    missing_inputs: [],
+    invalid_inputs: ["legs[0].speed_kn", "weather_restrictions[0].end_time"],
+    assumptions: [],
+    explanation:
+      "The vessel speed is zero, but speed must be greater than zero. The weather restriction ends before it starts. Both inputs are invalid, so voyage calculations cannot be performed.",
   },
 };
 
