@@ -65,3 +65,20 @@ describe("calculatePortArrival", () => {
     ).toThrow("Overnight port windows are not supported.");
   });
 });
+
+describe("calculatePortArrival - closing-time precision", () => {
+  const window = {
+    opens_at: "18:00",
+    closes_at: "22:00",
+  };
+
+  it.each(["2026-10-15T22:00:00.001Z", "2026-10-15T22:00:30Z"])(
+    "should wait until the next opening when arrival is after closing: %s",
+    (eta) => {
+      const result = calculatePortArrival(eta, window);
+
+      expect(result.permitted_arrival).toBe("2026-10-16T18:00:00.000Z");
+      expect(result.waiting_hours).toBeGreaterThan(0);
+    },
+  );
+});

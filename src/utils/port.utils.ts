@@ -36,23 +36,31 @@ export function calculatePortArrival(
     throw new Error("Overnight port windows are not supported.");
   }
 
-  const etaMinutes = eta.getUTCHours() * 60 + eta.getUTCMinutes();
+  const openingTime = new Date(eta);
+  openingTime.setUTCHours(
+    Number(openingMatch[1]),
+    Number(openingMatch[2]),
+    0,
+    0,
+  );
+
+  const closingTime = new Date(eta);
+  closingTime.setUTCHours(
+    Number(closingMatch[1]),
+    Number(closingMatch[2]),
+    0,
+    0,
+  );
 
   let permittedArrival = new Date(eta);
 
-  if (etaMinutes < openingMinutes) {
-    permittedArrival.setUTCHours(
-      Math.floor(openingMinutes / 60),
-      openingMinutes % 60,
-      0,
-      0,
-    );
-  } else if (etaMinutes > closingMinutes) {
+  if (eta.getTime() < openingTime.getTime()) {
+    permittedArrival = openingTime;
+  } else if (eta.getTime() > closingTime.getTime()) {
     permittedArrival.setUTCDate(permittedArrival.getUTCDate() + 1);
-
     permittedArrival.setUTCHours(
-      Math.floor(openingMinutes / 60),
-      openingMinutes % 60,
+      Number(openingMatch[1]),
+      Number(openingMatch[2]),
       0,
       0,
     );
