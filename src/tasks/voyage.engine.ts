@@ -44,19 +44,13 @@ export function calculateVoyage(task: VoyageTask): VoyageCalculationResult {
   let physicalEta: string;
 
   if (task.weather_restrictions.length > 0) {
-    if (task.legs.length !== 1 || task.weather_restrictions.length !== 1) {
-      throw new Error(
-        "Weather calculations currently support one leg and one restriction.",
-      );
-    }
-
-    const leg = task.legs[0];
-
     const weatherResult = calculateWeatherRestrictedVoyage(
       task.departure_time,
-      leg.distance_nm,
-      leg.speed_kn!,
-      task.weather_restrictions[0],
+      task.legs.map((leg) => ({
+        distance_nm: leg.distance_nm,
+        speed_kn: leg.speed_kn!,
+      })),
+      task.weather_restrictions,
     );
 
     totalTravelHours = weatherResult.total_travel_hours;

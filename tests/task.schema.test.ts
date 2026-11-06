@@ -123,6 +123,63 @@ describe("VoyageTaskSchema", () => {
 
       expect(VoyageTaskSchema.safeParse(task).success).toBe(false);
     });
+
+    it("should accept multiple non-overlapping weather restrictions", () => {
+      const task = createValidTask();
+
+      task.weather_restrictions = [
+        {
+          start_time: "2026-10-15T10:00:00Z",
+          end_time: "2026-10-15T12:00:00Z",
+          restricted_speed_kn: 6,
+        },
+        {
+          start_time: "2026-10-15T14:00:00Z",
+          end_time: "2026-10-15T16:00:00Z",
+          restricted_speed_kn: 8,
+        },
+      ];
+
+      expect(VoyageTaskSchema.safeParse(task).success).toBe(true);
+    });
+
+    it("should accept adjacent weather restrictions", () => {
+      const task = createValidTask();
+
+      task.weather_restrictions = [
+        {
+          start_time: "2026-10-15T10:00:00Z",
+          end_time: "2026-10-15T12:00:00Z",
+          restricted_speed_kn: 6,
+        },
+        {
+          start_time: "2026-10-15T12:00:00Z",
+          end_time: "2026-10-15T14:00:00Z",
+          restricted_speed_kn: 8,
+        },
+      ];
+
+      expect(VoyageTaskSchema.safeParse(task).success).toBe(true);
+    });
+
+    it("should accept overlapping weather restrictions", () => {
+      const task = createValidTask();
+
+      task.weather_restrictions = [
+        {
+          start_time: "2026-10-15T10:00:00Z",
+          end_time: "2026-10-15T13:00:00Z",
+          restricted_speed_kn: 8,
+        },
+        {
+          start_time: "2026-10-15T12:00:00Z",
+          end_time: "2026-10-15T15:00:00Z",
+          restricted_speed_kn: 5,
+        },
+      ];
+
+      expect(VoyageTaskSchema.safeParse(task).success).toBe(true);
+    });
   });
 
   describe("port window", () => {

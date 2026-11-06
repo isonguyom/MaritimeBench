@@ -243,4 +243,37 @@ describe("calculateVoyage", () => {
     expect(result.deadline_feasible).toBeNull();
     expect(result.missing_inputs).toContain("vessel_speed");
   });
+
+  it("should calculate a multi-leg voyage with a weather restriction crossing the leg boundary", () => {
+    const multiLegWeatherTask: VoyageTask = {
+      ...baselineTask,
+      task_id: "MB-WEATHER-ML-01",
+      departure_time: "2026-10-15T08:00:00Z",
+      legs: [
+        {
+          leg_id: "LEG-01",
+          distance_nm: 120,
+          speed_kn: 12,
+        },
+        {
+          leg_id: "LEG-02",
+          distance_nm: 120,
+          speed_kn: 10,
+        },
+      ],
+      weather_restrictions: [
+        {
+          start_time: "2026-10-15T16:00:00Z",
+          end_time: "2026-10-15T22:00:00Z",
+          restricted_speed_kn: 6,
+        },
+      ],
+    };
+
+    const result = calculateVoyage(multiLegWeatherTask);
+
+    expect(result.status).toBe("completed");
+    expect(result.total_travel_hours).toBeCloseTo(24.8);
+    expect(result.physical_eta).toBe("2026-10-16T08:48:00.000Z");
+  });
 });

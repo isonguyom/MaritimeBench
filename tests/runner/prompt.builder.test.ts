@@ -79,4 +79,25 @@ describe("Evaluation prompt builder", () => {
 
     expect(result.systemPrompt).toContain('"invalid_inputs"');
   });
+
+  it("should explain multiple and overlapping weather restrictions", () => {
+    const result = buildEvaluationPrompt(task);
+
+    expect(result.systemPrompt).toContain(
+      "Multiple weather restrictions may apply during the same voyage.",
+    );
+    expect(result.systemPrompt).toContain(
+      "use the lowest speed among the current leg's normal speed and all active restrictions' restricted speeds.",
+    );
+    expect(result.systemPrompt).toContain(
+      "A restricted speed is a maximum-speed constraint.",
+    );
+    expect(result.systemPrompt).toContain("Adjacent restrictions are valid.");
+    expect(result.systemPrompt).toContain(
+      "Restrictions must continue to apply across leg boundaries",
+    );
+    expect(result.systemPrompt).toContain(
+      "Treat all supplied weather restrictions as voyage-wide time-based restrictions.",
+    );
+  });
 });

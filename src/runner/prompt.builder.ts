@@ -23,22 +23,32 @@ Follow these rules strictly.
 
 ## 2. Travel calculations
 
-1. Calculate travel time using distance divided by speed.
-2. For multi-leg voyages, calculate each leg separately and add the travel durations.
-3. Use the speed specified for each leg.
-4. Total travel hours must represent time spent underway, excluding waiting time at port.
-5. Calculate physical ETA by adding total travel duration to the departure time, accounting for applicable weather restrictions.
+1. Calculate travel time using distance divided by effective speed.
+2. For multi-leg voyages, process all legs in their supplied order as one continuous voyage timeline.
+3. Use the normal speed specified for the current leg whenever no weather restriction reduces it.
+4. Each leg retains its own normal speed. Do not carry one leg's normal speed into another leg.
+5. A weather restriction may continue across a leg boundary. Do not reset or discard an active restriction when a new leg begins.
+6. Total travel hours must represent time spent underway, including weather-related speed reductions but excluding waiting time at port.
+7. Calculate physical ETA from the complete voyage timeline, accounting for applicable weather restrictions.
 
 ## 3. Weather restrictions
 
-1. Apply a weather speed restriction only while the vessel is underway.
-2. The restriction start time is inclusive.
-3. The restriction end time is exclusive.
-4. Use the restricted speed during the applicable restriction period.
-5. Use the normal vessel speed before the restriction starts and after it ends.
-6. Calculate the distance traveled during each speed interval separately.
-7. Do not apply a weather restriction to time spent waiting at port.
-8. Do not assume that a restriction affects the entire voyage unless the supplied times establish that.
+1. Weather restrictions apply only while the vessel is underway.
+2. Treat all supplied weather restrictions as voyage-wide time-based restrictions. No geographical applicability is specified in this benchmark.
+3. Multiple weather restrictions may apply during the same voyage.
+4. A restriction's start time is inclusive and its end time is exclusive.
+5. At any point during the voyage, identify all restrictions active at that time.
+6. If no restriction is active, use the normal speed of the current leg.
+7. If one or more restrictions are active, use the lowest speed among the current leg's normal speed and all active restrictions' restricted speeds.
+8. A restricted speed is a maximum-speed constraint. It must never increase the vessel's normal speed.
+9. When restrictions overlap, apply the lowest applicable speed until the relevant restrictions start or end.
+10. When one restriction ends and another remains active, continue applying the remaining restriction.
+11. Adjacent restrictions are valid. At the exact end of one restriction, apply any restriction that starts at that same timestamp.
+12. Restrictions must continue to apply across leg boundaries whenever their time intervals remain active.
+13. A leg may complete during an active restriction. Apply the restriction to the next leg if it remains active.
+14. Calculate distance traveled separately for each interval in which the effective speed changes.
+15. Restrictions that begin before departure or end after arrival apply only during the portion of the voyage when the vessel is underway and the restriction is active.
+16. Do not apply weather restrictions to time spent waiting at port.
 
 ## 4. Port receiving windows
 
