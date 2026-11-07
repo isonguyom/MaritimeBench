@@ -534,6 +534,41 @@ describe("Report generator", () => {
     expect(readFileSync(outputPath, "utf-8")).toContain("MB-03");
   });
 
+  it("should not overwrite an existing task summary CSV", () => {
+    const outputDirectory = createTemporaryDirectory();
+    const existingContent = "previous report";
+
+    const existingPath = path.join(outputDirectory, "task-summary.csv");
+    writeFileSync(existingPath, existingContent, "utf-8");
+
+    expect(() =>
+      generateTaskSummaryCsv([createTrial()], [createTask()], outputDirectory),
+    ).toThrow();
+
+    expect(readFileSync(existingPath, "utf-8")).toBe(existingContent);
+  });
+
+  it("should not overwrite an existing benchmark summary JSON", () => {
+  const outputDirectory = createTemporaryDirectory();
+  const existingContent = '{"previous":"report"}';
+
+  const existingPath = path.join(
+    outputDirectory,
+    "benchmark-summary.json",
+  );
+  writeFileSync(existingPath, existingContent, "utf-8");
+
+  expect(() =>
+    generateBenchmarkSummaryJson(
+      [createTrial()],
+      [createTask()],
+      outputDirectory,
+    ),
+  ).toThrow();
+
+  expect(readFileSync(existingPath, "utf-8")).toBe(existingContent);
+});
+
   it("should generate a benchmark summary JSON file", () => {
     const outputDirectory = createTemporaryDirectory();
 

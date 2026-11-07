@@ -70,7 +70,7 @@ describe("runEvaluation", () => {
       model: "mock-model",
     });
 
-    expect(result.run_id).toMatch(/^[0-9a-f-]{36}$/i);
+    expect(result.run_id).toMatch(/^run-[0-9a-f]{8}$/i);
     expect(result.trial_number).toBe(1);
 
     expect(result.started_at).toBeDefined();
@@ -92,11 +92,11 @@ describe("runEvaluation", () => {
 
     const result = await runEvaluation("MB-01", adapter, {
       model: "mock-model",
-      runId: "experiment-001",
+      runId: "run-001",
       trialNumber: 3,
     });
 
-    expect(result.run_id).toBe("experiment-001");
+    expect(result.run_id).toBe("run-001");
     expect(result.trial_number).toBe(3);
   });
 

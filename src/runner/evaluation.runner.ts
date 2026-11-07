@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { generateRunId } from "../utils/run-id.utils";
 
 import type { ModelAdapter } from "../adapters/model.adapter";
 import { gradeVoyageResponse } from "../graders/voyage.grader";
@@ -38,7 +38,7 @@ export async function runEvaluation(
   options: EvaluationRunOptions,
 ): Promise<EvaluationRunResult> {
   const startedAt = new Date();
-  const runId = options.runId ?? randomUUID();
+  const runId = options.runId ?? generateRunId();
   const trialNumber = options.trialNumber ?? 1;
 
   // Load and validate the task and its reference.

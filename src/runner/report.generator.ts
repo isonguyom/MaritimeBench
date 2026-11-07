@@ -78,7 +78,10 @@ export function generateTaskSummaryCsv(
   const csv = convertToCsv(aggregation.task_summaries);
   const outputPath = path.join(outputDirectory, "task-summary.csv");
 
-  writeFileSync(outputPath, csv, "utf-8");
+  writeFileSync(outputPath, csv, {
+    encoding: "utf-8",
+    flag: "wx",
+  });
 
   return outputPath;
 }
@@ -97,7 +100,10 @@ export function generateBenchmarkSummaryJson(
   writeFileSync(
     outputPath,
     JSON.stringify(aggregation.benchmark_summaries, null, 2),
-    "utf-8",
+    {
+      encoding: "utf-8",
+      flag: "wx",
+    },
   );
 
   return outputPath;

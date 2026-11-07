@@ -92,5 +92,11 @@ export function parseReportCliArguments(args: string[]): ReportCliOptions {
     throw new Error("Missing value for --run-id.");
   }
 
+  if (!/^[a-zA-Z0-9_-]+$/.test(runId)) {
+    throw new Error(
+      "Invalid run ID. Use only letters, numbers, hyphens, and underscores.",
+    );
+  }
+
   return { runId };
 }

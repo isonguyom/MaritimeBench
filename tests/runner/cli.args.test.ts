@@ -57,15 +57,15 @@ describe("parseCliArguments", () => {
 describe("parseReportCliArguments", () => {
   it("parses a valid report command", () => {
     expect(
-      parseReportCliArguments(["--report", "--run-id", "experiment-001"]),
+      parseReportCliArguments(["--report", "--run-id", "run-001"]),
     ).toEqual({
-      runId: "experiment-001",
+      runId: "run-001",
     });
   });
 
   it("rejects a missing report flag", () => {
     expect(() =>
-      parseReportCliArguments(["--run-id", "experiment-001"]),
+      parseReportCliArguments(["--run-id", "run-001"]),
     ).toThrow("Expected exactly one --report argument.");
   });
 
@@ -75,7 +75,7 @@ describe("parseReportCliArguments", () => {
         "--report",
         "--report",
         "--run-id",
-        "experiment-001",
+        "run-001",
       ]),
     ).toThrow("Expected exactly one --report argument.");
   });
@@ -91,7 +91,7 @@ describe("parseReportCliArguments", () => {
       parseReportCliArguments([
         "--report",
         "--run-id",
-        "experiment-001",
+        "run-001",
         "--run-id",
         "experiment-002",
       ]),
@@ -115,7 +115,7 @@ describe("parseReportCliArguments", () => {
       parseReportCliArguments([
         "--report",
         "--run-id",
-        "experiment-001",
+        "run-001",
         "--unknown",
       ]),
     ).toThrow("Unexpected report argument: --unknown");

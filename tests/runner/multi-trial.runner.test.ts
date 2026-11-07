@@ -46,10 +46,10 @@ describe("runMultipleTrials", () => {
     const result = await runMultipleTrials("MB-01", adapter, {
       model: "mock-model",
       trials: 3,
-      runId: "experiment-001",
+      runId: "run-001",
     });
 
-    expect(result.run_id).toBe("experiment-001");
+    expect(result.run_id).toBe("run-001");
     expect(result.task_id).toBe("MB-01");
     expect(result.total_trials).toBe(3);
     expect(result.results).toHaveLength(3);
@@ -59,7 +59,7 @@ describe("runMultipleTrials", () => {
     ]);
 
     expect(
-      result.results.every((trial) => trial.run_id === "experiment-001"),
+      result.results.every((trial) => trial.run_id === "run-001"),
     ).toBe(true);
 
     expect(result.results.every((trial) => trial.grading.score === 100)).toBe(

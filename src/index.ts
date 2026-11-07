@@ -1,5 +1,7 @@
 import "dotenv/config";
 
+import path from "node:path";
+
 import { MockAdapter } from "./adapters/mock.adapter";
 import { OpenAIAdapter } from "./adapters/openai.adapter";
 import { parseCliArguments, parseReportCliArguments } from "./runner/cli.args";
@@ -37,8 +39,19 @@ async function main(): Promise<void> {
 
       const tasks = taskIds.map((taskId) => loadEvaluationData(taskId).task);
 
-      const csvPath = generateTaskSummaryCsv(trials, tasks);
-      const jsonPath = generateBenchmarkSummaryJson(trials, tasks);
+      const reportDirectory = path.resolve(
+        process.cwd(),
+        "results",
+        "reports",
+        runId,
+      );
+
+      const csvPath = generateTaskSummaryCsv(trials, tasks, reportDirectory);
+      const jsonPath = generateBenchmarkSummaryJson(
+        trials,
+        tasks,
+        reportDirectory,
+      );
 
       console.log("");
       console.log("Reports generated successfully.");

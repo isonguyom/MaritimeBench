@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { generateRunId } from "../utils/run-id.utils";
 
 import type { ModelAdapter } from "../adapters/model.adapter";
 import {
@@ -27,7 +27,7 @@ export async function runMultipleTrials(
     throw new Error("Number of trials must be a positive integer.");
   }
 
-  const runId = options.runId ?? randomUUID();
+  const runId = options.runId ?? generateRunId();
   const results: EvaluationRunResult[] = [];
 
   for (let trialNumber = 1; trialNumber <= options.trials; trialNumber++) {
