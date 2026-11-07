@@ -222,4 +222,13 @@ describe("VoyageResponseSchema", () => {
 
     expect(VoyageResponseSchema.safeParse(response).success).toBe(false);
   });
+
+  it("should reject unexpected response fields", () => {
+  const response = {
+    ...validResponse,
+    unexpected_field: "not allowed",
+  };
+
+  expect(VoyageResponseSchema.safeParse(response).success).toBe(false);
+});
 });

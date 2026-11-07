@@ -103,6 +103,20 @@ describe("Voyage response grader", () => {
     expect(result.errors.length).toBeGreaterThan(0);
   });
 
+  it("should reject unexpected fields in a model response", () => {
+    const response = {
+      ...reference,
+      unexpected_field: "not allowed",
+    };
+
+    const result = gradeVoyageResponse(response, task, reference);
+
+    expect(result.valid_response).toBe(false);
+    expect(result.score).toBe(0);
+    expect(result.task_passed).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
+  });
+
   it("should not grade deadline feasibility when no deadline exists", () => {
     const response = {
       ...reference,
@@ -111,10 +125,12 @@ describe("Voyage response grader", () => {
 
     const result = gradeVoyageResponse(response, task, reference);
 
-    expect(result.task_passed).toBe(true);
+    expect(result.task_passed).toBe(false);
     expect(
-      result.checks.some((check) => check.name === "deadline_feasible"),
-    ).toBe(false);
+      result.checks.some(
+        (check) => check.name === "deadline_feasible" && check.passed === false,
+      ),
+    ).toBe(true);
   });
 
   it("should not grade port arrival when no port window exists", () => {
@@ -126,13 +142,17 @@ describe("Voyage response grader", () => {
 
     const result = gradeVoyageResponse(response, task, reference);
 
-    expect(result.task_passed).toBe(true);
+    expect(result.task_passed).toBe(false);
     expect(
-      result.checks.some((check) => check.name === "permitted_arrival"),
-    ).toBe(false);
-    expect(result.checks.some((check) => check.name === "waiting_hours")).toBe(
-      false,
-    );
+      result.checks.some(
+        (check) => check.name === "permitted_arrival" && check.passed === false,
+      ),
+    ).toBe(true);
+    expect(
+      result.checks.some(
+        (check) => check.name === "waiting_hours" && check.passed === false,
+      ),
+    ).toBe(true);
   });
 
   it("should reject invented calculations when required information is missing", () => {

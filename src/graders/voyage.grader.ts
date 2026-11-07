@@ -192,6 +192,22 @@ export function gradeVoyageResponse(
         reference.waiting_hours,
         response.waiting_hours,
       );
+    } else {
+      addCheck(
+        "permitted_arrival",
+        ["response_integrity"],
+        response.permitted_arrival === null,
+        null,
+        response.permitted_arrival,
+      );
+
+      addCheck(
+        "waiting_hours",
+        ["response_integrity"],
+        response.waiting_hours === null,
+        null,
+        response.waiting_hours,
+      );
     }
 
     // Deadline feasibility applies only when the task defines a deadline.
@@ -201,6 +217,14 @@ export function gradeVoyageResponse(
         ["deadline_constraint"],
         response.deadline_feasible === reference.deadline_feasible,
         reference.deadline_feasible,
+        response.deadline_feasible,
+      );
+    } else {
+      addCheck(
+        "deadline_feasible",
+        ["response_integrity"],
+        response.deadline_feasible === null,
+        null,
         response.deadline_feasible,
       );
     }
