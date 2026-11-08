@@ -1,8 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  mockAdapter: vi.fn(),
-  openAIAdapter: vi.fn(),
+  resolveAdapter: vi.fn(),
   discoverEvaluationTasks: vi.fn(),
   runEvaluationSuite: vi.fn(),
   loadEvaluationData: vi.fn(),
@@ -11,12 +10,8 @@ const mocks = vi.hoisted(() => ({
   generateBenchmarkSummaryJson: vi.fn(),
 }));
 
-vi.mock("./../src/adapters/mock.adapter", () => ({
-  MockAdapter: mocks.mockAdapter,
-}));
-
-vi.mock("./../src/adapters/openai.adapter", () => ({
-  OpenAIAdapter: mocks.openAIAdapter,
+vi.mock("./../src/adapters/adapter.registry", () => ({
+  resolveAdapter: mocks.resolveAdapter,
 }));
 
 vi.mock("./../src/runner/suite.loader", () => ({
@@ -52,13 +47,12 @@ describe("CLI main", () => {
 
     process.argv = ["node", "cli"];
 
-    mocks.mockAdapter.mockImplementation(function () {
-      return { provider: "mock" };
-    });
-
-    mocks.openAIAdapter.mockImplementation(function () {
-      return { provider: "openai" };
-    });
+    mocks.resolveAdapter.mockImplementation((provider, model) => ({
+      adapter: { provider },
+      model:
+        model ??
+        (provider === "mock" ? "mock-model" : `${provider}-test-model`),
+    }));
 
     mocks.discoverEvaluationTasks.mockReturnValue(["MB-01", "MB-02"]);
 
@@ -99,8 +93,7 @@ describe("CLI main", () => {
     await main("mock");
 
     expect(mocks.discoverEvaluationTasks).toHaveBeenCalledOnce();
-    expect(mocks.mockAdapter).toHaveBeenCalledOnce();
-    expect(mocks.openAIAdapter).not.toHaveBeenCalled();
+    expect(mocks.resolveAdapter).toHaveBeenCalledWith("mock", undefined);
 
     expect(mocks.runEvaluationSuite).toHaveBeenCalledWith(
       ["MB-01", "MB-02"],
@@ -158,10 +151,39 @@ describe("CLI main", () => {
     expect(mocks.runEvaluationSuite).not.toHaveBeenCalled();
   });
 
-  it("rejects OpenAI execution when OPENAI_MODEL is missing", async () => {
-    await main("openai");
+  it("resolves an explicitly selected provider and model", async () => {
+    process.argv = [
+      "node",
+      "cli",
+      "--provider",
+      "anthropic",
+      "--model",
+      "claude-test-model",
+    ];
 
-    expect(mocks.openAIAdapter).not.toHaveBeenCalled();
+    await main("mock");
+
+    expect(mocks.resolveAdapter).toHaveBeenCalledWith(
+      "anthropic",
+      "claude-test-model",
+    );
+
+    expect(mocks.runEvaluationSuite).toHaveBeenCalledWith(
+      ["MB-01", "MB-02"],
+      { provider: "anthropic" },
+      { model: "claude-test-model", trials: 1 },
+    );
+  });
+
+  it("sets a nonzero exit code when provider resolution fails", async () => {
+    mocks.resolveAdapter.mockImplementation(() => {
+      throw new Error("Anthropic API key is missing.");
+    });
+
+    process.argv = ["node", "cli", "--provider", "anthropic"];
+
+    await main("mock");
+
     expect(mocks.runEvaluationSuite).not.toHaveBeenCalled();
     expect(process.exitCode).toBe(1);
   });

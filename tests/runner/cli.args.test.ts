@@ -90,10 +90,68 @@ describe("parseCliArguments", () => {
     );
   });
 
-  it("rejects an unsupported provider", () => {
+  it("accepts the Anthropic provider", () => {
+    expect(
+      parseCliArguments(["--task", "MB-01", "--provider", "anthropic"]),
+    ).toEqual({
+      taskId: "MB-01",
+      provider: "anthropic",
+      trials: 1,
+    });
+  });
+
+  it("accepts the Google provider", () => {
+    expect(
+      parseCliArguments(["--task", "MB-01", "--provider", "google"]),
+    ).toEqual({
+      taskId: "MB-01",
+      provider: "google",
+      trials: 1,
+    });
+  });
+
+  it("normalizes provider names", () => {
+    expect(
+      parseCliArguments(["--task", "MB-01", "--provider", " Anthropic "])
+        .provider,
+    ).toBe("anthropic");
+  });
+
+  it("parses a custom model ID", () => {
+    expect(
+      parseCliArguments([
+        "--task",
+        "MB-01",
+        "--provider",
+        "anthropic",
+        "--model",
+        "claude-test-model",
+      ]),
+    ).toEqual({
+      taskId: "MB-01",
+      provider: "anthropic",
+      model: "claude-test-model",
+      trials: 1,
+    });
+  });
+
+  it("rejects a missing model value", () => {
+    expect(() => parseCliArguments(["--task", "MB-01", "--model"])).toThrow(
+      "Missing value for --model.",
+    );
+  });
+
+  it("rejects duplicate model arguments", () => {
     expect(() =>
-      parseCliArguments(["--task", "MB-01", "--provider", "gemini"]),
-    ).toThrow("Invalid provider");
+      parseCliArguments([
+        "--task",
+        "MB-01",
+        "--model",
+        "model-one",
+        "--model",
+        "model-two",
+      ]),
+    ).toThrow("Duplicate argument: --model.");
   });
 
   it("rejects a missing value for an argument", () => {

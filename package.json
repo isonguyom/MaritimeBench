@@ -24,6 +24,8 @@
     "quality": "npm run format:check && npm run typecheck && npm test"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^1.6.0",
+    "@google/genai": "^3.0.0",
     "dotenv": "^18.0.9",
     "openai": "^7.47.0",
     "zod": "^4.6.7"

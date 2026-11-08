@@ -1,8 +1,13 @@
 export interface CliOptions {
   taskId?: string;
   suite?: "all";
-  provider: "mock" | "openai";
+  provider: string;
+  model?: string;
   trials: number;
+}
+
+export interface ReportCliOptions {
+  runId: string;
 }
 
 export interface ReportCliOptions {
@@ -11,11 +16,12 @@ export interface ReportCliOptions {
 
 export function parseCliArguments(
   args: string[],
-  defaultProvider: "mock" | "openai" = "mock",
+  defaultProvider = "mock",
 ): CliOptions {
   let taskId: string | undefined;
   let suite: string | undefined;
   let provider: string | undefined;
+  let model: string | undefined;
   let trialsValue: string | undefined;
 
   const seenArguments = new Set<string>();
@@ -27,6 +33,7 @@ export function parseCliArguments(
       argument !== "--task" &&
       argument !== "--suite" &&
       argument !== "--provider" &&
+      argument !== "--model" &&
       argument !== "--trials"
     ) {
       throw new Error(`Unknown argument: ${argument}`);
@@ -57,6 +64,10 @@ export function parseCliArguments(
         provider = value;
         break;
 
+      case "--model":
+        model = value;
+        break;
+
       case "--trials":
         trialsValue = value;
         break;
@@ -81,12 +92,14 @@ export function parseCliArguments(
     throw new Error(`Invalid suite: ${suite}. Supported suites: all.`);
   }
 
-  const selectedProvider = provider ?? defaultProvider;
+  const selectedProvider = (provider ?? defaultProvider).trim().toLowerCase();
 
-  if (selectedProvider !== "mock" && selectedProvider !== "openai") {
-    throw new Error(
-      `Invalid provider: ${selectedProvider}. Supported providers: mock, openai.`,
-    );
+  if (!selectedProvider) {
+    throw new Error("Provider name cannot be empty.");
+  }
+
+  if (model !== undefined && !model.trim()) {
+    throw new Error("Model name cannot be empty.");
   }
 
   let trials = 1;
@@ -107,6 +120,7 @@ export function parseCliArguments(
     ...(taskId ? { taskId } : {}),
     ...(suite ? { suite: suite as "all" } : {}),
     provider: selectedProvider,
+    ...(model !== undefined ? { model: model.trim() } : {}),
     trials,
   };
 }

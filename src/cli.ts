@@ -2,8 +2,7 @@ import "dotenv/config";
 
 import path from "node:path";
 
-import { MockAdapter } from "./adapters/mock.adapter";
-import { OpenAIAdapter } from "./adapters/openai.adapter";
+import { resolveAdapter } from "./adapters/adapter.registry";
 import { parseCliArguments, parseReportCliArguments } from "./runner/cli.args";
 import { discoverEvaluationTasks } from "./runner/suite.loader";
 import { runEvaluationSuite } from "./runner/suite.runner";
@@ -14,7 +13,7 @@ import {
   loadTrialRecords,
 } from "./runner/report.generator";
 
-export async function main(defaultProvider: "mock" | "openai"): Promise<void> {
+export async function main(defaultProvider: string): Promise<void> {
   console.log("=================================");
   console.log("       MARITIMEBENCH");
   console.log("=================================");
@@ -68,15 +67,7 @@ export async function main(defaultProvider: "mock" | "openai"): Promise<void> {
       ? [options.taskId]
       : discoverEvaluationTasks();
 
-    const model =
-      options.provider === "mock" ? "mock-model" : process.env.OPENAI_MODEL;
-
-    if (!model) {
-      throw new Error("OPENAI_MODEL is missing from your .env file.");
-    }
-
-    const adapter =
-      options.provider === "mock" ? new MockAdapter() : new OpenAIAdapter();
+    const { adapter, model } = resolveAdapter(options.provider, options.model);
 
     console.log(`Mode: ${options.taskId ? "Single task" : "Full suite"}`);
     console.log(`Tasks: ${taskIds.length}`);
