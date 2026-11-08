@@ -5,6 +5,7 @@ import { gradeVoyageResponse } from "../graders/voyage.grader";
 import { loadEvaluationData } from "./data.loader";
 import { buildEvaluationPrompt } from "./prompt.builder";
 import { saveEvaluationResult } from "./result.storage";
+import { ModelRequestError } from "./trial-error.classifier";
 
 export interface EvaluationRunOptions {
   model: string;
@@ -30,6 +31,8 @@ export interface EvaluationRunResult {
   raw_response: string;
   parse_error: string | null;
   grading: ReturnType<typeof gradeVoyageResponse>;
+  system_prompt: string;
+  user_prompt: string;
 }
 
 export async function runEvaluation(
@@ -48,17 +51,24 @@ export async function runEvaluation(
   const prompt = buildEvaluationPrompt(task);
 
   // Send the task to the model through the supplied adapter.
-  const modelResponse = await adapter.generate({
-    model: options.model,
-    systemPrompt: prompt.systemPrompt,
-    userPrompt: prompt.userPrompt,
-    ...(options.temperature !== undefined
-      ? { temperature: options.temperature }
-      : {}),
-    ...(options.maxOutputTokens !== undefined
-      ? { maxOutputTokens: options.maxOutputTokens }
-      : {}),
-  });
+  let modelResponse;
+
+  try {
+    modelResponse = await adapter.generate({
+      model: options.model,
+      taskId,
+      systemPrompt: prompt.systemPrompt,
+      userPrompt: prompt.userPrompt,
+      ...(options.temperature !== undefined
+        ? { temperature: options.temperature }
+        : {}),
+      ...(options.maxOutputTokens !== undefined
+        ? { maxOutputTokens: options.maxOutputTokens }
+        : {}),
+    });
+  } catch (error) {
+    throw new ModelRequestError(error);
+  }
 
   // Parse the model's JSON response.
   let parsedResponse: unknown;
@@ -99,6 +109,8 @@ export async function runEvaluation(
     raw_response: modelResponse.content,
     parse_error: parseError,
     grading,
+    system_prompt: prompt.systemPrompt,
+    user_prompt: prompt.userPrompt,
   };
 
   // Save the complete evaluation result.

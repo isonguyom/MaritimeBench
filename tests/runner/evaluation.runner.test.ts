@@ -146,6 +146,20 @@ describe("runEvaluation", () => {
     expect(request.userPrompt).not.toContain("total_travel_hours");
   });
 
+  it("should capture the exact prompts sent to the model", async () => {
+    const adapter = createMockAdapter("{}");
+
+    const result = await runEvaluation("MB-01", adapter, {
+      model: "mock-model",
+    });
+
+    const request = adapter.generate.mock.calls[0][0];
+
+    expect(result.system_prompt).toBe(request.systemPrompt);
+    expect(result.user_prompt).toBe(request.userPrompt);
+    expect(result.user_prompt).toContain("MB-01");
+  });
+
   it("should run a complete evaluation using MockAdapter and save the result", async () => {
     const mockResponse = {
       task_id: "MB-01",
@@ -161,7 +175,7 @@ describe("runEvaluation", () => {
       explanation: "Travel time is 240 / 12 = 20 hours.",
     };
 
-    const adapter = new MockAdapter(JSON.stringify(mockResponse));
+    const adapter = new MockAdapter();
 
     const result = await runEvaluation("MB-01", adapter, {
       model: "mock-model",
@@ -195,5 +209,7 @@ describe("runEvaluation", () => {
     expect(savedResult.trial_number).toBe(1);
     expect(savedResult.started_at).toBe(result.started_at);
     expect(savedResult.completed_at).toBe(result.completed_at);
+    expect(savedResult.system_prompt).toBe(result.system_prompt);
+    expect(savedResult.user_prompt).toBe(result.user_prompt);
   });
 });

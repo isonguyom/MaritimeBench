@@ -224,11 +224,11 @@ describe("VoyageResponseSchema", () => {
   });
 
   it("should reject unexpected response fields", () => {
-  const response = {
-    ...validResponse,
-    unexpected_field: "not allowed",
-  };
+    const response = {
+      ...validResponse,
+      unexpected_field: "not allowed",
+    };
 
-  expect(VoyageResponseSchema.safeParse(response).success).toBe(false);
-});
+    expect(VoyageResponseSchema.safeParse(response).success).toBe(false);
+  });
 });

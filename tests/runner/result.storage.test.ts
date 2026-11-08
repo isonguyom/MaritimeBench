@@ -28,6 +28,8 @@ describe("saveEvaluationResult", () => {
       provider: "mock",
       model: "test-model",
       latency_ms: 120,
+      system_prompt: "You are a maritime voyage planning assistant.",
+      user_prompt: "Calculate the voyage ETA for MB-01.",
       raw_response: '{"task_id":"MB-01"}',
       parse_error: null,
       grading: {
@@ -60,6 +62,8 @@ describe("saveEvaluationResult", () => {
       provider: "mock",
       model: "test-model",
       latency_ms: 120,
+      system_prompt: "You are a maritime voyage planning assistant.",
+      user_prompt: "Calculate the voyage ETA for MB-01.",
       raw_response: "{}",
       parse_error: null,
       grading: {

@@ -26,6 +26,8 @@ function createTrial(overrides: Partial<TrialRecord> = {}): TrialRecord {
     latency_ms: 1000,
     input_tokens: 100,
     output_tokens: 50,
+    system_prompt: "You are a maritime voyage planning assistant.",
+    user_prompt: "Calculate the voyage ETA for MB-03.",
     raw_response: "{}",
     parse_error: null,
     grading: {

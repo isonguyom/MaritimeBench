@@ -67,6 +67,8 @@ function createTrial(): EvaluationRunResult {
     latency_ms: 1000,
     input_tokens: 100,
     output_tokens: 50,
+    system_prompt: "You are a maritime voyage planning assistant.",
+    user_prompt: "Calculate the voyage ETA for MB-03.",
     raw_response: "{}",
     parse_error: null,
     grading: {
@@ -549,25 +551,22 @@ describe("Report generator", () => {
   });
 
   it("should not overwrite an existing benchmark summary JSON", () => {
-  const outputDirectory = createTemporaryDirectory();
-  const existingContent = '{"previous":"report"}';
+    const outputDirectory = createTemporaryDirectory();
+    const existingContent = '{"previous":"report"}';
 
-  const existingPath = path.join(
-    outputDirectory,
-    "benchmark-summary.json",
-  );
-  writeFileSync(existingPath, existingContent, "utf-8");
+    const existingPath = path.join(outputDirectory, "benchmark-summary.json");
+    writeFileSync(existingPath, existingContent, "utf-8");
 
-  expect(() =>
-    generateBenchmarkSummaryJson(
-      [createTrial()],
-      [createTask()],
-      outputDirectory,
-    ),
-  ).toThrow();
+    expect(() =>
+      generateBenchmarkSummaryJson(
+        [createTrial()],
+        [createTask()],
+        outputDirectory,
+      ),
+    ).toThrow();
 
-  expect(readFileSync(existingPath, "utf-8")).toBe(existingContent);
-});
+    expect(readFileSync(existingPath, "utf-8")).toBe(existingContent);
+  });
 
   it("should generate a benchmark summary JSON file", () => {
     const outputDirectory = createTemporaryDirectory();

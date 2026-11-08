@@ -1,51 +1,113 @@
 export interface CliOptions {
-  taskId: string;
+  taskId?: string;
+  suite?: "all";
   provider: "mock" | "openai";
+  trials: number;
 }
 
 export interface ReportCliOptions {
   runId: string;
 }
 
-export function parseCliArguments(args: string[]): CliOptions {
+export function parseCliArguments(
+  args: string[],
+  defaultProvider: "mock" | "openai" = "mock",
+): CliOptions {
   let taskId: string | undefined;
+  let suite: string | undefined;
   let provider: string | undefined;
+  let trialsValue: string | undefined;
+
+  const seenArguments = new Set<string>();
 
   for (let index = 0; index < args.length; index++) {
     const argument = args[index];
 
-    if (argument === "--task") {
-      taskId = args[index + 1];
-      index++;
-    } else if (argument === "--provider") {
-      provider = args[index + 1];
-      index++;
-    } else {
+    if (
+      argument !== "--task" &&
+      argument !== "--suite" &&
+      argument !== "--provider" &&
+      argument !== "--trials"
+    ) {
       throw new Error(`Unknown argument: ${argument}`);
     }
+
+    if (seenArguments.has(argument)) {
+      throw new Error(`Duplicate argument: ${argument}.`);
+    }
+
+    seenArguments.add(argument);
+
+    const value = args[index + 1];
+
+    if (!value || value.startsWith("--")) {
+      throw new Error(`Missing value for ${argument}.`);
+    }
+
+    switch (argument) {
+      case "--task":
+        taskId = value;
+        break;
+
+      case "--suite":
+        suite = value;
+        break;
+
+      case "--provider":
+        provider = value;
+        break;
+
+      case "--trials":
+        trialsValue = value;
+        break;
+    }
+
+    index++;
   }
 
-  if (!taskId) {
-    throw new Error("Missing required argument: --task");
+  if (taskId && suite) {
+    throw new Error("Use either --task or --suite, not both.");
   }
 
-  if (!/^MB-\d{2}$/.test(taskId)) {
+  if (!taskId && !suite) {
+    suite = "all";
+  }
+
+  if (taskId && !/^MB-\d{2}$/.test(taskId)) {
     throw new Error(`Invalid task ID: ${taskId}. Expected format: MB-01.`);
   }
 
-  if (!provider) {
-    throw new Error("Missing required argument: --provider");
+  if (suite && suite !== "all") {
+    throw new Error(`Invalid suite: ${suite}. Supported suites: all.`);
   }
 
-  if (provider !== "mock" && provider !== "openai") {
+  const selectedProvider = provider ?? defaultProvider;
+
+  if (selectedProvider !== "mock" && selectedProvider !== "openai") {
     throw new Error(
-      `Invalid provider: ${provider}. Supported providers: mock, openai.`,
+      `Invalid provider: ${selectedProvider}. Supported providers: mock, openai.`,
     );
   }
 
+  let trials = 1;
+
+  if (trialsValue !== undefined) {
+    if (!/^\d+$/.test(trialsValue)) {
+      throw new Error("Invalid trial count. Expected a positive integer.");
+    }
+
+    trials = Number(trialsValue);
+
+    if (!Number.isSafeInteger(trials) || trials < 1) {
+      throw new Error("Invalid trial count. Expected a positive integer.");
+    }
+  }
+
   return {
-    taskId,
-    provider,
+    ...(taskId ? { taskId } : {}),
+    ...(suite ? { suite: suite as "all" } : {}),
+    provider: selectedProvider,
+    trials,
   };
 }
 

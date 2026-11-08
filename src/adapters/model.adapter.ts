@@ -1,5 +1,6 @@
 export interface ModelRequest {
   model: string;
+  taskId?: string;
   systemPrompt: string;
   userPrompt: string;
   temperature?: number;

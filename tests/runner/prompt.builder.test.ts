@@ -102,17 +102,15 @@ describe("Evaluation prompt builder", () => {
   });
 
   it("should enforce the complete response output rules", () => {
-  const result = buildEvaluationPrompt(task);
+    const result = buildEvaluationPrompt(task);
 
-  expect(result.systemPrompt).toContain("Include every field");
-  expect(result.systemPrompt).toContain(
-    "Use null when a field is not applicable or cannot be determined.",
-  );
-  expect(result.systemPrompt).toContain(
-    "Do not add fields outside the specified JSON structure.",
-  );
-  expect(result.systemPrompt).toContain(
-    "Explain the calculations clearly",
-  );
-});
+    expect(result.systemPrompt).toContain("Include every field");
+    expect(result.systemPrompt).toContain(
+      "Use null when a field is not applicable or cannot be determined.",
+    );
+    expect(result.systemPrompt).toContain(
+      "Do not add fields outside the specified JSON structure.",
+    );
+    expect(result.systemPrompt).toContain("Explain the calculations clearly");
+  });
 });

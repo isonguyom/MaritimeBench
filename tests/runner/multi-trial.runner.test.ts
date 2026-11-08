@@ -58,9 +58,9 @@ describe("runMultipleTrials", () => {
       1, 2, 3,
     ]);
 
-    expect(
-      result.results.every((trial) => trial.run_id === "run-001"),
-    ).toBe(true);
+    expect(result.results.every((trial) => trial.run_id === "run-001")).toBe(
+      true,
+    );
 
     expect(result.results.every((trial) => trial.grading.score === 100)).toBe(
       true,

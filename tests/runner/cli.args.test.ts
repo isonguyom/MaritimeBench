@@ -5,40 +5,89 @@ import {
 } from "../../src/runner/cli.args";
 
 describe("parseCliArguments", () => {
-  it("parses valid task and mock provider arguments", () => {
-    expect(
-      parseCliArguments(["--task", "MB-01", "--provider", "mock"]),
-    ).toEqual({
+  it("parses a single task using the default mock provider", () => {
+    expect(parseCliArguments(["--task", "MB-01"])).toEqual({
       taskId: "MB-01",
       provider: "mock",
+      trials: 1,
     });
   });
 
-  it("parses valid task and OpenAI provider arguments", () => {
+  it("parses a single task with an explicit provider", () => {
     expect(
       parseCliArguments(["--task", "MB-08", "--provider", "openai"]),
     ).toEqual({
       taskId: "MB-08",
       provider: "openai",
+      trials: 1,
     });
   });
 
-  it("rejects a missing task argument", () => {
-    expect(() => parseCliArguments(["--provider", "mock"])).toThrow(
-      "Missing required argument: --task",
-    );
+  it("uses the supplied default provider", () => {
+    expect(parseCliArguments(["--task", "MB-01"], "openai")).toEqual({
+      taskId: "MB-01",
+      provider: "openai",
+      trials: 1,
+    });
   });
 
-  it("rejects a missing provider argument", () => {
-    expect(() => parseCliArguments(["--task", "MB-01"])).toThrow(
-      "Missing required argument: --provider",
-    );
+  it("parses a full suite selection", () => {
+    expect(parseCliArguments(["--suite", "all"])).toEqual({
+      suite: "all",
+      provider: "mock",
+      trials: 1,
+    });
+  });
+
+  it("parses a custom trial count", () => {
+    expect(parseCliArguments(["--suite", "all", "--trials", "5"])).toEqual({
+      suite: "all",
+      provider: "mock",
+      trials: 5,
+    });
+  });
+
+  it("parses task, provider, and trial arguments together", () => {
+    expect(
+      parseCliArguments([
+        "--task",
+        "MB-03",
+        "--provider",
+        "openai",
+        "--trials",
+        "3",
+      ]),
+    ).toEqual({
+      taskId: "MB-03",
+      provider: "openai",
+      trials: 3,
+    });
+  });
+
+  it("defaults to the full suite when no task or suite is specified", () => {
+    expect(parseCliArguments([])).toEqual({
+      suite: "all",
+      provider: "mock",
+      trials: 1,
+    });
+  });
+
+  it("rejects selecting both a task and a suite", () => {
+    expect(() =>
+      parseCliArguments(["--task", "MB-01", "--suite", "all"]),
+    ).toThrow("Use either --task or --suite, not both.");
   });
 
   it("rejects an invalid task ID", () => {
-    expect(() =>
-      parseCliArguments(["--task", "MB-1", "--provider", "mock"]),
-    ).toThrow("Invalid task ID");
+    expect(() => parseCliArguments(["--task", "MB-1"])).toThrow(
+      "Invalid task ID",
+    );
+  });
+
+  it("rejects an unsupported suite", () => {
+    expect(() => parseCliArguments(["--suite", "weather"])).toThrow(
+      "Invalid suite",
+    );
   });
 
   it("rejects an unsupported provider", () => {
@@ -47,10 +96,53 @@ describe("parseCliArguments", () => {
     ).toThrow("Invalid provider");
   });
 
-  it("rejects unknown arguments", () => {
+  it("rejects a missing value for an argument", () => {
+    expect(() => parseCliArguments(["--task", "MB-01", "--trials"])).toThrow(
+      "Missing value for --trials.",
+    );
+  });
+
+  it("rejects a trial count of zero", () => {
     expect(() =>
-      parseCliArguments(["--task", "MB-01", "--provider", "mock", "--unknown"]),
-    ).toThrow("Unknown argument");
+      parseCliArguments(["--suite", "all", "--trials", "0"]),
+    ).toThrow("Invalid trial count");
+  });
+
+  it("rejects a negative trial count", () => {
+    expect(() =>
+      parseCliArguments(["--suite", "all", "--trials", "-2"]),
+    ).toThrow("Invalid trial count");
+  });
+
+  it("rejects a decimal trial count", () => {
+    expect(() =>
+      parseCliArguments(["--suite", "all", "--trials", "2.5"]),
+    ).toThrow("Invalid trial count");
+  });
+
+  it("rejects a non-numeric trial count", () => {
+    expect(() =>
+      parseCliArguments(["--suite", "all", "--trials", "three"]),
+    ).toThrow("Invalid trial count");
+  });
+
+  it("rejects duplicate arguments", () => {
+    expect(() =>
+      parseCliArguments([
+        "--task",
+        "MB-01",
+        "--provider",
+        "mock",
+        "--provider",
+        "openai",
+      ]),
+    ).toThrow("Duplicate argument: --provider.");
+  });
+
+  it("rejects unknown arguments", () => {
+    expect(() => parseCliArguments(["--task", "MB-01", "--unknown"])).toThrow(
+      "Unknown argument: --unknown",
+    );
   });
 });
 
@@ -64,19 +156,14 @@ describe("parseReportCliArguments", () => {
   });
 
   it("rejects a missing report flag", () => {
-    expect(() =>
-      parseReportCliArguments(["--run-id", "run-001"]),
-    ).toThrow("Expected exactly one --report argument.");
+    expect(() => parseReportCliArguments(["--run-id", "run-001"])).toThrow(
+      "Expected exactly one --report argument.",
+    );
   });
 
   it("rejects a duplicate report flag", () => {
     expect(() =>
-      parseReportCliArguments([
-        "--report",
-        "--report",
-        "--run-id",
-        "run-001",
-      ]),
+      parseReportCliArguments(["--report", "--report", "--run-id", "run-001"]),
     ).toThrow("Expected exactly one --report argument.");
   });
 
@@ -112,12 +199,7 @@ describe("parseReportCliArguments", () => {
 
   it("rejects unexpected arguments", () => {
     expect(() =>
-      parseReportCliArguments([
-        "--report",
-        "--run-id",
-        "run-001",
-        "--unknown",
-      ]),
+      parseReportCliArguments(["--report", "--run-id", "run-001", "--unknown"]),
     ).toThrow("Unexpected report argument: --unknown");
   });
 
