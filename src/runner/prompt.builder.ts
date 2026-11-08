@@ -60,6 +60,7 @@ Follow these rules strictly.
 6. Waiting time is the difference between physical ETA and permitted arrival.
 7. Do not add port waiting time to total travel hours.
 8. Do not change physical ETA because of port waiting.
+9. If the task does not supply a port receiving window, set permitted_arrival and waiting_hours to null. Do not use physical_eta or zero for these fields.
 
 ## 5. Hard deadlines
 
@@ -81,6 +82,7 @@ Follow these rules strictly.
 7. Distances and speeds must be greater than zero.
 8. Restriction end time must be later than restriction start time.
 9. Do not include invalid inputs in missing_inputs.
+10. Use the benchmark's canonical labels for missing_inputs, not inferred JSON field paths. For a missing vessel speed, use vessel_speed.
 
 ## 7. Output requirements
 

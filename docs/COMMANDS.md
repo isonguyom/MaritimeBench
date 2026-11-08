@@ -2,11 +2,13 @@
 
 ## 1. Setup
 
-Install dependencies:
+Install dependencies from the committed lockfile:
 
 ```powershell
-npm install
+npm ci
 ```
+
+Alternatively, use `npm install` when adding or updating dependencies.
 
 Create your environment file:
 
@@ -134,7 +136,7 @@ Specify a model directly:
 npm run eval -- --provider openai --model YOUR_MODEL_ID
 ```
 
-The model is selected through `--model` when supplied; otherwise, `OPENAI_MODEL` is used.
+The model supplied through `--model` takes precedence over `OPENAI_MODEL`. If neither is supplied, model resolution fails.
 
 ## 5. Anthropic Evaluation
 
@@ -164,7 +166,7 @@ Specify a model directly:
 npm run eval -- --provider anthropic --model YOUR_MODEL_ID
 ```
 
-The model is selected through `--model` when supplied; otherwise, `ANTHROPIC_MODEL` is used.
+The model supplied through `--model` takes precedence over `ANTHROPIC_MODEL`. If neither is supplied, model resolution fails.
 
 ## 6. Google Gemini Evaluation
 
@@ -194,7 +196,7 @@ Specify a model directly:
 npm run eval -- --provider google --model YOUR_MODEL_ID
 ```
 
-The model is selected through `--model` when supplied; otherwise, `GOOGLE_MODEL` is used.
+The model supplied through `--model` takes precedence over `GOOGLE_MODEL`. If neither is supplied, model resolution fails.
 
 ## 7. Supported CLI Arguments
 
@@ -221,9 +223,11 @@ Model selection precedence:
 
 1. Model supplied through `--model`.
 2. Model configured in the provider's environment variable.
-3. Provider default, if configured.
+3. Built-in default, if available. Currently, only Mock has a built-in default (`mock-model`).
 
-## 8. Run Manifests and Results
+OpenAI, Anthropic and Google require their respective model environment variables unless a model is supplied through `--model`.
+
+## 8. Run Manifests and Trial Results
 
 Every evaluation generates a unique run ID.
 
@@ -233,9 +237,25 @@ The run manifest is saved under:
 results/manifests/<RUN_ID>.json
 ```
 
-Trial-level result files are also saved under `results/`.
+Individual trial records are saved directly under:
 
-Use the run ID printed after evaluation to generate reports or compare runs.
+```text
+results/<TASK_ID>_<RUN_ID>_trial-<NUMBER>_<UUID>.json
+```
+
+Each successful trial record contains:
+
+- Task, run, provider and model identifiers.
+- Trial number and execution timestamps.
+- Latency and available token usage.
+- Complete system and user prompts.
+- Raw model response.
+- JSON parsing error, if any.
+- Grading result and individual evaluation checks.
+
+These records preserve the model outputs and grading evidence needed for subsequent analysis and report generation.
+
+API execution failures are handled separately from successfully completed and graded trials. A failed API request should not automatically be interpreted as a model reasoning failure.
 
 ## 9. Report Generation
 
@@ -255,8 +275,8 @@ results/reports/<RUN_ID>/
 
 The generated reports include:
 
-- `task-summary.csv` — task-level evaluation summary.
-- `benchmark-summary.json` — benchmark-level summary.
+- `task-summary.csv` - task-level evaluation summary.
+- `benchmark-summary.json` - benchmark-level summary.
 
 Report generation uses previously saved trial records and does not execute new model evaluations.
 
@@ -266,10 +286,9 @@ For meaningful provider comparisons:
 
 1. Run the same benchmark tasks for each provider.
 2. Use the same number of trials per task.
-3. Keep prompts, assumptions, and grading rules unchanged.
+3. Keep prompts, assumptions and grading rules unchanged.
 4. Record the provider and model ID for every run.
-5. Compare task scores, pass rates, constraint violations, response validity, latency, and token usage where available.
+5. Compare task scores, pass rates, constraint violations, response validity, latency and token usage where available.
+6. Report API execution failures separately from model reasoning failures.
 
-Keep Mock results separate from real model evaluations.
-
-A failed API request caused by missing credentials, rate limits, or insufficient account credits is an execution failure, not automatically a model reasoning failure.
+Keep Mock results separate from real model evaluations. Mock results validate the benchmark pipeline and grader; they are not evidence of actual model performance.
