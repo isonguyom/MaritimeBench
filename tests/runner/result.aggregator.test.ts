@@ -120,6 +120,19 @@ function createTaskSummary(overrides: Partial<TaskSummary> = {}): TaskSummary {
     constraint_failure_trials: 1,
     constraint_failure_rate: 33.3333,
 
+    pass_at_k: {
+      1: 66.6667,
+      2: 100,
+      3: null,
+      5: null,
+    },
+    pass_all_k: {
+      1: 66.6667,
+      2: 33.3333,
+      3: null,
+      5: null,
+    },
+
     ...overrides,
   };
 }
@@ -595,5 +608,149 @@ describe("Result aggregator", () => {
 
     expect(result.task_summaries).toEqual([]);
     expect(result.benchmark_summaries).toEqual([]);
+  });
+
+  it("should calculate pass@k and pass^k using finite-sample probabilities", () => {
+    const trials = [
+      createTrial({ trial_number: 1 }),
+      createTrial({
+        trial_number: 2,
+        grading: {
+          ...createTrial().grading,
+          task_passed: false,
+          score: 0,
+        },
+      }),
+      createTrial({ trial_number: 3 }),
+      createTrial({
+        trial_number: 4,
+        grading: {
+          ...createTrial().grading,
+          task_passed: false,
+          score: 0,
+        },
+      }),
+    ];
+
+    const summary = aggregateTaskGroup(
+      {
+        task_id: "MB-03",
+        provider: "mock",
+        model: "mock-model",
+        run_id: "run-001",
+        temperature: 0,
+        max_output_tokens: 1000,
+        trials,
+      },
+      createTask(),
+    );
+
+    expect(summary.passed_trials).toBe(2);
+
+    expect(summary.pass_at_k).toEqual({
+      1: 50,
+      2: 83.33333333333334,
+      3: 100,
+      5: null,
+    });
+
+    expect(summary.pass_all_k[1]).toBe(50);
+    expect(summary.pass_all_k[2]).toBeCloseTo(16.6667, 3);
+    expect(summary.pass_all_k[3]).toBe(0);
+    expect(summary.pass_all_k[5]).toBeNull();
+
+    expect(summary.pass_at_k[1]).toBe(summary.task_pass_rate);
+    expect(summary.pass_all_k[1]).toBe(summary.task_pass_rate);
+  });
+
+  it("should return null for pass@k and pass^k when trials are insufficient", () => {
+    const trials = [
+      createTrial({ trial_number: 1 }),
+      createTrial({ trial_number: 2 }),
+    ];
+
+    const summary = aggregateTaskGroup(
+      {
+        task_id: "MB-03",
+        provider: "mock",
+        model: "mock-model",
+        run_id: "run-001",
+        temperature: 0,
+        max_output_tokens: 1000,
+        trials,
+      },
+      createTask(),
+    );
+
+    expect(summary.pass_at_k[3]).toBeNull();
+    expect(summary.pass_at_k[5]).toBeNull();
+
+    expect(summary.pass_all_k[3]).toBeNull();
+    expect(summary.pass_all_k[5]).toBeNull();
+  });
+
+  it("should calculate pass@k and pass^k macro averages using eligible tasks only", () => {
+    const summaries = [
+      createTaskSummary({
+        task_id: "MB-03",
+        pass_at_k: {
+          1: 100,
+          2: 100,
+          3: 80,
+          5: null,
+        },
+        pass_all_k: {
+          1: 100,
+          2: 50,
+          3: 20,
+          5: null,
+        },
+      }),
+      createTaskSummary({
+        task_id: "MB-05",
+        pass_at_k: {
+          1: 0,
+          2: 50,
+          3: null,
+          5: null,
+        },
+        pass_all_k: {
+          1: 0,
+          2: 25,
+          3: null,
+          5: null,
+        },
+      }),
+    ];
+
+    const benchmark = aggregateBenchmarkSummaries(summaries)[0];
+
+    expect(benchmark.macro_average_pass_at_k).toEqual({
+      1: 50,
+      2: 75,
+      3: 80,
+      5: null,
+    });
+
+    expect(benchmark.macro_average_pass_all_k).toEqual({
+      1: 50,
+      2: 37.5,
+      3: 20,
+      5: null,
+    });
+
+    expect(benchmark.pass_at_k_eligible_tasks).toEqual({
+      1: 2,
+      2: 2,
+      3: 1,
+      5: 0,
+    });
+
+    expect(benchmark.pass_all_k_eligible_tasks).toEqual({
+      1: 2,
+      2: 2,
+      3: 1,
+      5: 0,
+    });
   });
 });

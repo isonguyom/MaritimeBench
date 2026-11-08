@@ -31,7 +31,7 @@ function convertToCsv(summaries: TaskSummary[]): string {
     return "";
   }
 
-  const headers: (keyof TaskSummary)[] = [
+  const headers = [
     "task_id",
     "provider",
     "model",
@@ -42,6 +42,14 @@ function convertToCsv(summaries: TaskSummary[]): string {
     "valid_trials",
     "passed_trials",
     "task_pass_rate",
+    "pass_at_1",
+    "pass_at_2",
+    "pass_at_3",
+    "pass_at_5",
+    "pass_all_1",
+    "pass_all_2",
+    "pass_all_3",
+    "pass_all_5",
     "average_score",
     "response_validity_rate",
     "average_latency_ms",
@@ -60,7 +68,41 @@ function convertToCsv(summaries: TaskSummary[]): string {
   ];
 
   const rows = summaries.map((summary) =>
-    headers.map((header) => escapeCsvValue(summary[header])),
+    [
+      summary.task_id,
+      summary.provider,
+      summary.model,
+      summary.run_id,
+      summary.temperature,
+      summary.max_output_tokens,
+      summary.total_trials,
+      summary.valid_trials,
+      summary.passed_trials,
+      summary.task_pass_rate,
+      summary.pass_at_k[1],
+      summary.pass_at_k[2],
+      summary.pass_at_k[3],
+      summary.pass_at_k[5],
+      summary.pass_all_k[1],
+      summary.pass_all_k[2],
+      summary.pass_all_k[3],
+      summary.pass_all_k[5],
+      summary.average_score,
+      summary.response_validity_rate,
+      summary.average_latency_ms,
+      summary.median_latency_ms,
+      summary.min_latency_ms,
+      summary.max_latency_ms,
+      summary.average_input_tokens,
+      summary.average_output_tokens,
+      summary.score_standard_deviation,
+      summary.minimum_score,
+      summary.maximum_score,
+      summary.constraint_applicable_trials,
+      summary.constraint_assessable_trials,
+      summary.constraint_failure_trials,
+      summary.constraint_failure_rate,
+    ].map(escapeCsvValue),
   );
 
   return [headers.join(","), ...rows.map((row) => row.join(","))].join("\n");

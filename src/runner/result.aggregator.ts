@@ -1,6 +1,18 @@
 import type { EvaluationRunResult } from "./evaluation.runner";
 import type { VoyageTask } from "../schemas/task.schema";
 
+export const PASS_K_VALUES = [1, 2, 3, 5] as const;
+
+export type KMetricValues = Record<
+  (typeof PASS_K_VALUES)[number],
+  number | null
+>;
+
+export type KEligibleTaskCounts = Record<
+  (typeof PASS_K_VALUES)[number],
+  number
+>;
+
 export interface TaskSummary {
   task_id: string;
   provider: string;
@@ -34,6 +46,9 @@ export interface TaskSummary {
   constraint_assessable_trials: number;
   constraint_failure_trials: number;
   constraint_failure_rate: number | null;
+
+  pass_at_k: KMetricValues;
+  pass_all_k: KMetricValues;
 }
 
 export interface BenchmarkSummary {
@@ -55,6 +70,12 @@ export interface BenchmarkSummary {
   constraint_assessable_trials: number;
   constraint_failure_trials: number;
   constraint_failure_rate: number | null;
+
+  macro_average_pass_at_k: KMetricValues;
+  macro_average_pass_all_k: KMetricValues;
+
+  pass_at_k_eligible_tasks: KEligibleTaskCounts;
+  pass_all_k_eligible_tasks: KEligibleTaskCounts;
 
   task_summaries: TaskSummary[];
 }
@@ -144,6 +165,116 @@ function calculateStandardDeviation(values: number[]): number {
   return Math.sqrt(variance);
 }
 
+/**
+ * Estimates the probability of obtaining at least one successful
+ * trial when selecting k trials without replacement.
+ *
+ * Returns null when fewer than k trials are available.
+ */
+function calculatePassAtK(
+  totalTrials: number,
+  passedTrials: number,
+  k: number,
+): number | null {
+  if (totalTrials < k) {
+    return null;
+  }
+
+  if (totalTrials - passedTrials < k) {
+    return 100;
+  }
+
+  let probabilityOfNoSuccess = 1;
+
+  for (let i = 0; i < k; i++) {
+    probabilityOfNoSuccess *=
+      (totalTrials - passedTrials - i) / (totalTrials - i);
+  }
+
+  return (1 - probabilityOfNoSuccess) * 100;
+}
+
+/**
+ * Estimates the probability that all k selected trials succeed
+ * when selecting k trials without replacement.
+ *
+ * Returns null when fewer than k trials are available.
+ */
+function calculatePassAllK(
+  totalTrials: number,
+  passedTrials: number,
+  k: number,
+): number | null {
+  if (totalTrials < k) {
+    return null;
+  }
+
+  if (passedTrials < k) {
+    return 0;
+  }
+
+  let probabilityOfAllSuccesses = 1;
+
+  for (let i = 0; i < k; i++) {
+    probabilityOfAllSuccesses *= (passedTrials - i) / (totalTrials - i);
+  }
+
+  return probabilityOfAllSuccesses * 100;
+}
+
+function calculateKMetrics(
+  totalTrials: number,
+  passedTrials: number,
+): {
+  passAtK: KMetricValues;
+  passAllK: KMetricValues;
+} {
+  const passAtK = Object.fromEntries(
+    PASS_K_VALUES.map((k) => [
+      k,
+      calculatePassAtK(totalTrials, passedTrials, k),
+    ]),
+  ) as KMetricValues;
+
+  const passAllK = Object.fromEntries(
+    PASS_K_VALUES.map((k) => [
+      k,
+      calculatePassAllK(totalTrials, passedTrials, k),
+    ]),
+  ) as KMetricValues;
+
+  return { passAtK, passAllK };
+}
+
+function calculateMacroAverageKMetrics(
+  summaries: TaskSummary[],
+  metric: "pass_at_k" | "pass_all_k",
+): {
+  averages: KMetricValues;
+  eligibleTasks: KEligibleTaskCounts;
+} {
+  const averages = {} as KMetricValues;
+  const eligibleTasks = {} as KEligibleTaskCounts;
+
+  for (const k of PASS_K_VALUES) {
+    const eligibleSummaries = summaries.filter(
+      (summary) => summary[metric][k] !== null,
+    );
+
+    eligibleTasks[k] = eligibleSummaries.length;
+
+    averages[k] =
+      eligibleSummaries.length === 0
+        ? null
+        : eligibleSummaries.reduce(
+            (total, summary) => total + summary[metric][k]!,
+            0,
+          ) / eligibleSummaries.length;
+  }
+
+  return { averages, eligibleTasks };
+}
+
 export function aggregateTaskGroup(
   group: TaskTrialGroup,
   task: VoyageTask,
@@ -163,7 +294,6 @@ export function aggregateTaskGroup(
   );
 
   const scores = trials.map((trial) => trial.grading.score);
-
   const latencies = trials.map((trial) => trial.latency_ms);
 
   const inputTokens = trials
@@ -208,6 +338,11 @@ export function aggregateTaskGroup(
     return values.reduce((total, value) => total + value, 0) / values.length;
   };
 
+  const { passAtK, passAllK } = calculateKMetrics(
+    totalTrials,
+    passedTrials.length,
+  );
+
   return {
     task_id: group.task_id,
     provider: group.provider,
@@ -240,6 +375,9 @@ export function aggregateTaskGroup(
     score_standard_deviation: calculateStandardDeviation(scores),
     minimum_score: Math.min(...scores),
     maximum_score: Math.max(...scores),
+
+    pass_at_k: passAtK,
+    pass_all_k: passAllK,
 
     constraint_applicable_trials: hasApplicableConstraints ? totalTrials : 0,
     constraint_assessable_trials: assessableConstraintTrials.length,
@@ -314,6 +452,16 @@ export function aggregateBenchmarkSummaries(
     const average = (values: number[]): number =>
       values.reduce((total, value) => total + value, 0) / values.length;
 
+    const {
+      averages: macroAveragePassAtK,
+      eligibleTasks: passAtKEligibleTasks,
+    } = calculateMacroAverageKMetrics(summaries, "pass_at_k");
+
+    const {
+      averages: macroAveragePassAllK,
+      eligibleTasks: passAllKEligibleTasks,
+    } = calculateMacroAverageKMetrics(summaries, "pass_all_k");
+
     const firstSummary = summaries[0];
 
     return {
@@ -350,6 +498,12 @@ export function aggregateBenchmarkSummaries(
           ? (constraintFailureTrials / constraintAssessableTrials) * 100
           : null,
 
+      macro_average_pass_at_k: macroAveragePassAtK,
+      macro_average_pass_all_k: macroAveragePassAllK,
+
+      pass_at_k_eligible_tasks: passAtKEligibleTasks,
+      pass_all_k_eligible_tasks: passAllKEligibleTasks,
+
       task_summaries: summaries,
     };
   });
@@ -367,7 +521,6 @@ export function aggregateResults(
   }
 
   const taskMap = new Map(tasks.map((task) => [task.task_id, task]));
-
   const trialGroups = groupTrialsByTask(trials);
 
   const taskSummaries = trialGroups.map((group) => {

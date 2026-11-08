@@ -129,6 +129,25 @@ describe("Report generator", () => {
     expect(lines[0]).toContain("constraint_failure_rate");
     expect(lines[1]).toContain("MB-03");
     expect(lines[1]).toContain("mock-model");
+
+    const headers = lines[0].split(",");
+    const values = lines[1].split(",");
+
+    expect(headers).toContain("pass_at_1");
+    expect(headers).toContain("pass_at_2");
+    expect(headers).toContain("pass_at_3");
+    expect(headers).toContain("pass_at_5");
+
+    expect(headers).toContain("pass_all_1");
+    expect(headers).toContain("pass_all_2");
+    expect(headers).toContain("pass_all_3");
+    expect(headers).toContain("pass_all_5");
+
+    expect(values[headers.indexOf("pass_at_1")]).toBe("100");
+    expect(values[headers.indexOf("pass_all_1")]).toBe("100");
+
+    expect(values[headers.indexOf("pass_at_2")]).toBe("");
+    expect(values[headers.indexOf("pass_all_2")]).toBe("");
   });
 
   it("should return an empty CSV when there are no trials", () => {
@@ -585,6 +604,36 @@ describe("Report generator", () => {
     expect(content[0].total_tasks).toBe(1);
     expect(content[0].total_trials).toBe(1);
     expect(content[0].macro_average_task_pass_rate).toBe(100);
+    expect(content[0].macro_average_pass_at_k).toEqual({
+      "1": 100,
+      "2": null,
+      "3": null,
+      "5": null,
+    });
+
+    expect(content[0].macro_average_pass_all_k).toEqual({
+      "1": 100,
+      "2": null,
+      "3": null,
+      "5": null,
+    });
+
+    expect(content[0].pass_at_k_eligible_tasks).toEqual({
+      "1": 1,
+      "2": 0,
+      "3": 0,
+      "5": 0,
+    });
+
+    expect(content[0].pass_all_k_eligible_tasks).toEqual({
+      "1": 1,
+      "2": 0,
+      "3": 0,
+      "5": 0,
+    });
+
+    expect(content[0].task_summaries[0].pass_at_k["1"]).toBe(100);
+    expect(content[0].task_summaries[0].pass_all_k["1"]).toBe(100);
     expect(content[0].task_summaries).toHaveLength(1);
     expect(content[0].task_summaries[0].task_id).toBe("MB-03");
   });
