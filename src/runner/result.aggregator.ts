@@ -1,5 +1,6 @@
 import type { EvaluationRunResult } from "./evaluation.runner";
 import type { VoyageTask } from "../schemas/task.schema";
+import { inferModelFamily } from "./model-family";
 
 export const PASS_K_VALUES = [1, 2, 3, 5] as const;
 
@@ -17,6 +18,8 @@ export interface TaskSummary {
   task_id: string;
   provider: string;
   model: string;
+  model_family: string;
+  model_family_source: "inferred_from_model_id" | "unknown";
   run_id?: string;
   temperature?: number;
   max_output_tokens?: number;
@@ -54,6 +57,8 @@ export interface TaskSummary {
 export interface BenchmarkSummary {
   provider: string;
   model: string;
+  model_family: string;
+  model_family_source: "inferred_from_model_id" | "unknown";
   run_id?: string;
   temperature?: number;
   max_output_tokens?: number;
@@ -347,6 +352,8 @@ export function aggregateTaskGroup(
     task_id: group.task_id,
     provider: group.provider,
     model: group.model,
+    model_family: inferModelFamily(group.model).name,
+    model_family_source: inferModelFamily(group.model).source,
     ...(group.run_id !== undefined ? { run_id: group.run_id } : {}),
     ...(group.temperature !== undefined
       ? { temperature: group.temperature }
@@ -467,6 +474,8 @@ export function aggregateBenchmarkSummaries(
     return {
       provider: firstSummary.provider,
       model: firstSummary.model,
+      model_family: firstSummary.model_family,
+      model_family_source: firstSummary.model_family_source,
       ...(firstSummary.run_id !== undefined
         ? { run_id: firstSummary.run_id }
         : {}),

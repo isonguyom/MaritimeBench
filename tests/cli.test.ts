@@ -8,6 +8,10 @@ const mocks = vi.hoisted(() => ({
   loadTrialRecords: vi.fn(),
   generateTaskSummaryCsv: vi.fn(),
   generateBenchmarkSummaryJson: vi.fn(),
+  existsSync: vi.fn(),
+  readFileSync: vi.fn(),
+  readdirSync: vi.fn(),
+  generateAggregateReports: vi.fn(),
 }));
 
 vi.mock("./../src/adapters/adapter.registry", () => ({
@@ -32,7 +36,54 @@ vi.mock("./../src/runner/report.generator", () => ({
   generateBenchmarkSummaryJson: mocks.generateBenchmarkSummaryJson,
 }));
 
+vi.mock("node:fs", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("node:fs")>();
+  return {
+    ...actual,
+    existsSync: mocks.existsSync,
+    readFileSync: mocks.readFileSync,
+    readdirSync: mocks.readdirSync,
+  };
+});
+
+vi.mock("./../src/runner/aggregate.report.generator", () => ({
+  generateAggregateReports: mocks.generateAggregateReports,
+}));
+
 import { main } from "../src/cli";
+
+function createManifest(runId: string, provider = "openai") {
+  return {
+    run_id: runId,
+    provider,
+    model: "gpt-test-model",
+    temperature: 0,
+    max_output_tokens: 1000,
+    started_at: "2026-11-09T00:00:00.000Z",
+    completed_at: "2026-11-09T00:01:00.000Z",
+    status: "completed" as const,
+    totals: {
+      planned_trials: 1,
+      completed_trials: 1,
+      failed_trials: 0,
+      not_started_trials: 0,
+      running_trials: 0,
+      pending_trials: 0,
+    },
+    tasks: [],
+  };
+}
+
+function createTrial(runId: string, taskId = "MB-01") {
+  return {
+    run_id: runId,
+    task_id: taskId,
+    provider: "openai",
+    model: "gpt-test-model",
+    system_prompt: "Test system prompt",
+    user_prompt: `Test prompt for ${taskId}`,
+  };
+}
 
 describe("CLI main", () => {
   const originalArgv = process.argv;
@@ -55,6 +106,10 @@ describe("CLI main", () => {
     }));
 
     mocks.discoverEvaluationTasks.mockReturnValue(["MB-01", "MB-02"]);
+    mocks.loadTrialRecords.mockReturnValue([]);
+    mocks.loadEvaluationData.mockImplementation((taskId) => ({
+      task: { task_id: taskId },
+    }));
 
     mocks.runEvaluationSuite.mockResolvedValue({
       run_id: "run-001",
@@ -76,6 +131,18 @@ describe("CLI main", () => {
       status: "completed",
       manifest_path: "results/manifests/run-001.json",
     });
+
+    mocks.existsSync.mockReturnValue(true);
+    mocks.readdirSync.mockReturnValue([]);
+    mocks.readFileSync.mockImplementation((filePath) => {
+      const runId = String(filePath).split(/[\\/]/).pop()?.replace(".json", "");
+      return JSON.stringify(createManifest(runId ?? "run-001"));
+    });
+    mocks.generateAggregateReports.mockReturnValue([
+      "transcripts/task-summary.csv",
+      "transcripts/benchmark-summary.json",
+      "transcripts/source-runs.json",
+    ]);
   });
 
   afterEach(() => {
@@ -202,6 +269,74 @@ describe("CLI main", () => {
 
     await main("mock");
 
+    expect(process.exitCode).toBe(1);
+  });
+
+  it("automatically aggregates completed real-AI runs and excludes mock runs", async () => {
+    process.argv = ["node", "cli", "--aggregate"];
+
+    mocks.readdirSync.mockReturnValue([
+      "run-001.json",
+      "run-002.json",
+      "mock-run.json",
+    ]);
+
+    mocks.readFileSync.mockImplementation((filePath) => {
+      const file = String(filePath).split(/[\\/]/).pop();
+
+      return JSON.stringify(
+        file === "mock-run.json"
+          ? createManifest("mock-run", "mock")
+          : createManifest(file?.replace(".json", "") ?? "run-001"),
+      );
+    });
+
+    mocks.loadTrialRecords.mockImplementation((_directory, runId) => [
+      createTrial(runId),
+    ]);
+
+    await main("mock");
+
+    expect(mocks.loadTrialRecords).toHaveBeenCalledTimes(2);
+    expect(mocks.generateAggregateReports).toHaveBeenCalledOnce();
+    expect(
+      mocks.generateAggregateReports.mock.calls[0][2].source_run_ids,
+    ).toEqual(["run-001", "run-002"]);
+    expect(process.exitCode).toBeUndefined();
+  });
+
+  it("aggregates only explicitly selected runs", async () => {
+    process.argv = ["node", "cli", "--aggregate", "--runs", "run-002"];
+
+    mocks.readdirSync.mockReturnValue(["run-001.json", "run-002.json"]);
+    mocks.loadTrialRecords.mockReturnValue([createTrial("run-002")]);
+
+    await main("mock");
+
+    expect(mocks.loadTrialRecords).toHaveBeenCalledOnce();
+    expect(mocks.loadTrialRecords).toHaveBeenCalledWith(undefined, "run-002");
+    expect(
+      mocks.generateAggregateReports.mock.calls[0][2].source_run_ids,
+    ).toEqual(["run-002"]);
+    expect(process.exitCode).toBeUndefined();
+  });
+
+  it("rejects explicitly selected incomplete runs", async () => {
+    process.argv = ["node", "cli", "--aggregate", "--runs", "run-001"];
+
+    mocks.readFileSync.mockReturnValue(
+      JSON.stringify({
+        ...createManifest("run-001"),
+        status: "completed_with_failures",
+      }),
+    );
+
+    mocks.readdirSync.mockReturnValue(["run-001.json"]);
+
+    await main("mock");
+
+    expect(mocks.loadTrialRecords).not.toHaveBeenCalled();
+    expect(mocks.generateAggregateReports).not.toHaveBeenCalled();
     expect(process.exitCode).toBe(1);
   });
 });

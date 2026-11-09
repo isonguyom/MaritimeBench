@@ -1,311 +1,383 @@
 # MaritimeBench
 
-### Beyond ETA: Evaluating AI in Operational Voyage Planning
+## Beyond ETA: Evaluating AI in Operational Voyage Planning
 
-MaritimeBench is an AI evaluation benchmark designed to assess how effectively language models reason through operational voyage-planning scenarios involving vessel performance, weather-related speed restrictions, port receiving windows, deadlines, and incomplete or invalid voyage information.
+MaritimeBench is a deterministic benchmark for evaluating how large language models reason about operational maritime voyage-planning problems.
 
-Rather than evaluating models solely on their ability to calculate estimated time of arrival (ETA), MaritimeBench examines whether they can produce numerically accurate, operationally feasible, and constraint-compliant voyage plans.
+It tests whether AI models can calculate physical arrival times while correctly handling weather-related speed restrictions, port receiving windows, waiting periods, hard deadlines, multiple voyage legs, and missing or invalid information.
 
-The benchmark uses controlled synthetic scenarios, structured model responses, independently defined reference outcomes, and deterministic grading to measure model performance.
+Unlike a basic ETA calculator, MaritimeBench evaluates whether a model can produce a mathematically correct and operationally feasible voyage outcome when multiple constraints interact.
 
-## Research Objective
+**Repository:** https://github.com/isonguyom/MaritimeBench
 
-The primary objective is to investigate how reliably AI models handle operational voyage-planning constraints, particularly when multiple constraints must be considered together.
+**Video walkthrough:** [MaritimeBench Walkthrough](https://drive.google.com/file/d/10H_2VHe2dgooepeDGwxMrXL-g45_Jcah/view?usp=sharing)
 
-The benchmark focuses on the following questions:
+---
 
-- Can a model calculate accurate voyage durations and arrival times?
-- Can it correctly apply weather-related speed restrictions?
-- Can it account for port receiving windows and waiting time?
-- Can it determine whether a voyage can meet a hard arrival deadline?
-- Can it identify missing, invalid, or conflicting voyage information?
-- Can it integrate multiple operational constraints without producing an infeasible schedule?
-- How consistent are its results across repeated attempts?
+## 1. Domain and Expertise
 
-The central research interest is whether models that handle individual constraints correctly can also reason reliably when those constraints interact.
+**Domain:** Nautical Science, Maritime engineering, maritime operations, and operational voyage planning.
 
-## Benchmark Scope
+MaritimeBench was developed using nautical science and maritime engineering knowledge and software engineering practices, with particular attention to:
 
-MaritimeBench currently contains **nine implemented benchmark tasks**, identified as MB-01 through MB-09.
+- Vessel speed and distance calculations.
+- Physical estimated time of arrival (ETA).
+- Weather-related speed restrictions.
+- Port receiving windows and waiting time.
+- Hard arrival deadlines.
+- Multi-leg voyage calculations.
+- Missing and invalid operational information.
+- Combined operational constraints.
 
-| Task ID | Task Name | Evaluation Focus |
+The benchmark uses controlled synthetic maritime scenarios. It is intended to evaluate AI reasoning in a defined operational context, not to replace professional navigational judgment or real-time voyage-planning systems.
+
+## 2. What It Tests and Why It Matters
+
+MaritimeBench evaluates whether an AI model can move beyond producing a plausible ETA and calculate a voyage outcome that respects all applicable operational constraints.
+
+It measures:
+
+- Numerical accuracy.
+- Constraint integration.
+- Schedule feasibility.
+- Structured response validity.
+- Missing and invalid information handling.
+- Consistency across repeated trials.
+
+**Central research question:**
+
+Can an AI model produce a mathematically correct and operationally feasible voyage plan when several operational constraints interact?
+
+### Why this matters
+
+An incorrect ETA or an overlooked operational restriction can affect port coordination, vessel scheduling, arrival planning, and downstream operational decisions.
+
+A model that calculates physical arrival correctly but ignores a weather restriction or port receiving window may produce an answer that is mathematically plausible but operationally unsuitable.
+
+MaritimeBench is designed to expose these weaknesses through controlled, reproducible evaluation tasks.
+
+### Intended users
+
+- AI researchers evaluating numerical and constraint-based reasoning.
+- Developers building maritime AI applications.
+- Maritime technology companies assessing AI-assisted operational workflows.
+- Researchers investigating LLM reliability in domain-specific applications.
+
+## 3. Benchmark Tasks
+
+MaritimeBench contains nine synthetic tasks. Each task has a JSON input definition and a separately stored expected reference outcome.
+
+| Task | Scenario | What makes it challenging |
 |---|---|---|
-| MB-01 | Baseline ETA | Basic voyage duration and arrival calculation |
-| MB-02 | Multi-leg Voyage | Sequential voyage calculations across multiple legs |
-| MB-03 | Weather Speed Restriction | Applying reduced vessel speed during restricted periods |
-| MB-04 | Port Arrival Within Receiving Window | Determining whether arrival falls within an acceptable receiving window |
-| MB-05 | Port Waiting Time | Calculating waiting time when a vessel arrives outside a receiving window |
-| MB-06 | Hard Deadline Feasibility | Determining whether a voyage can meet a specified deadline |
-| MB-07 | Missing Required Information | Identifying missing information required for reliable planning |
-| MB-08 | Combined Weather and Port Constraints | Integrating weather restrictions and port receiving windows |
-| MB-09 | Multiple Invalid Voyage Inputs | Identifying multiple invalid voyage inputs |
+| MB-01 | Baseline ETA | Requires accurate distance, speed, duration, and physical arrival calculations. |
+| MB-02 | Multi-leg Voyage | Requires sequential calculations across two consecutive legs while preserving the voyage timeline. |
+| MB-03 | Weather Speed Restriction | Requires applying a temporary speed restriction only while the vessel is underway and the restriction is active. |
+| MB-04 | Port Arrival Within Receiving Window | Requires comparing physical ETA against an inclusive port receiving window. |
+| MB-05 | Port Waiting Time | Requires calculating the next permitted arrival and waiting duration without changing physical travel time. |
+| MB-06 | Hard Deadline Feasibility | Requires determining whether physical arrival is at or before a specified deadline. |
+| MB-07 | Missing Required Information | Requires identifying missing vessel speed and withholding unsupported calculations. |
+| MB-08 | Combined Weather and Port Constraints | Requires integrating a weather-related speed reduction with port receiving windows and waiting-time calculations. |
+| MB-09 | Multiple Invalid Voyage Inputs | Requires identifying all invalid inputs and their exact field paths before attempting calculations. |
 
-The scenarios are synthetic and designed to provide controlled evaluation conditions. They are not intended to represent every operational condition encountered in real-world maritime navigation.
+### Task difficulty
 
-## Evaluation Methodology
+The tasks progress from basic calculations to integrated operational reasoning:
 
-Each benchmark task consists of:
+- **Foundational calculations:** MB-01, MB-04, MB-06.
+- **Operational constraint handling:** MB-02, MB-03, MB-05, MB-07, MB-09.
+- **Integrated constraint reasoning:** MB-08.
 
-1. A structured task definition containing voyage inputs and operational constraints.
-2. A reference response defining the expected outcome.
-3. A model prompt requesting a structured JSON response.
-4. A response schema for validating model output.
-5. A deterministic grader for comparing model responses against expected results.
+MB-08 is particularly important because an incorrect physical ETA can propagate into permitted arrival and waiting-time calculations.
 
-The evaluation pipeline separates response validity from benchmark correctness.
+## 4. Evaluation Methodology
 
-A response must first satisfy the expected structure. It is then evaluated against the applicable reference values and operational constraints.
+Each benchmark task has:
 
-### Evaluation Dimensions
+1. A structured JSON task definition.
+2. A separately stored reference outcome.
+3. A system prompt defining operational rules.
+4. A task-specific user prompt.
+5. A structured response schema.
+6. A deterministic grading process.
 
-**1. Numerical Accuracy**
+The evaluation pipeline sends the task to a selected model provider, captures the response, validates its structure, and compares the result against the independently stored reference outcome.
 
-Evaluates the correctness of voyage duration, arrival time, and waiting time.
+### Operational assumptions
 
-**2. Constraint Compliance**
-
-Evaluates whether the model correctly applies weather-related speed restrictions and port receiving windows.
-
-**3. Schedule Feasibility**
-
-Evaluates whether the proposed schedule satisfies specified arrival deadlines and operational timing requirements.
-
-**4. Information Handling**
-
-Evaluates whether the model identifies missing, invalid, or conflicting voyage information rather than silently inventing or correcting inputs.
-
-**5. Response Validity**
-
-Evaluates whether the model produces output that conforms to the required structured response format.
-
-### Operational Assumptions
-
-The benchmark uses the following assumptions:
+The benchmark applies the following rules consistently:
 
 - All timestamps use UTC and ISO 8601 format.
 - Distances are expressed in nautical miles (nm).
-- Vessel speeds are expressed in knots (kn).
-- Weather-related speed restrictions apply only while the vessel is underway.
-- Port receiving windows are evaluated using the benchmark's defined daily-window rules.
-- Receiving-window boundaries are inclusive in the current benchmark specification.
-- A hard deadline is feasible only when physical arrival is at or before the specified deadline.
-- Missing or invalid information must be identified rather than silently assumed or corrected.
-- Additional delays, currents, traffic, and other operational factors are not introduced unless explicitly specified in a task.
+- Speeds are expressed in knots (kn).
+- Travel duration and waiting time are expressed in hours.
+- Weather restrictions apply only while the vessel is underway.
+- Weather restrictions are time-based and can span multiple voyage legs.
+- When multiple restrictions overlap, the lowest applicable speed is used.
+- Port receiving windows recur daily unless otherwise specified.
+- Port-window opening and closing times are inclusive.
+- Port waiting time is excluded from total travel hours.
+- Hard deadlines are assessed using physical ETA, not permitted arrival.
+- Arrival exactly at a hard deadline is considered feasible.
+- Missing or invalid inputs must be identified rather than invented.
+- No unstated currents, traffic delays, or additional operational delays are introduced.
 
-## Multi-Trial Evaluation Metrics
+## 5. Grading and Scoring
 
-MaritimeBench supports repeated model evaluations through the `--trials` CLI argument.
+MaritimeBench uses a deterministic reference-based grader rather than an LLM judge.
 
-A single evaluation attempt provides only one observation of model performance. Repeated trials allow the benchmark to examine both the likelihood of obtaining a successful response and the consistency of model performance.
+Each response is evaluated against predefined checks for the relevant task.
 
-Two statistical metrics are reported.
+### Scoring formula
 
-### 1. pass@k — At Least One Successful Attempt
+Task Score = (Number of Checks Passed / Total Number of Checks) × 100%
 
-`pass@k` estimates the probability of obtaining at least one successful result when selecting k attempts from the observed trials.
+Every grader check is marked critical.
 
-\[
-pass@k = 1 - \frac{\binom{n-c}{k}}{\binom{n}{k}}
-\]
+A task passes only when all its critical checks pass. The diagnostic percentage and strict task pass/fail status are both reported.
 
-### 2. pass^k — All Attempts Successful
+### Tolerances
 
-`pass^k` estimates the probability that all k selected attempts are successful.
+- Timestamps: 1 minute.
+- Duration values: 1 minute, equivalent to \(1/60\) hour.
 
-\[
-pass^k = \frac{\binom{c}{k}}{\binom{n}{k}}
-\]
+A response outside the applicable tolerance fails the corresponding check.
+
+### Multi-trial metrics
+
+For repeated evaluations, MaritimeBench calculates:
+
+**pass@k**
+
+The probability of obtaining at least one successful response when selecting \(k\) trials without replacement:
+
+pass@k = 1 − [C(n − c, k) / C(n, k)]
+
+**pass^k**
+
+The probability that all \(k\) selected trials are successful:
+
+passᵏ = C(c, k) / C(n, k)
 
 Where:
 
-- `n` represents the total number of observed trials.
-- `c` represents the number of successful trials.
-- `k` represents the number of attempts considered.
-- A successful trial must have both a valid response and a passing task grade.
+- \(n\) = total trials.
+- \(c\) = successful trials.
+- \(k\) = number of selected trials.
+- \(C(a, b)\) = Number of ways to choose b items from a items (combination).
 
-Both metrics use finite-sample combinatorial estimators based on selecting attempts without replacement from the observed trials.
+A successful trial requires a valid structured response and a passing task grade.
 
-### Supported k Values
+Metrics are reported for \(k = 1, 2, 3, 5\). They are null when insufficient trials are available.
 
-The benchmark calculates both metrics for:
+Benchmark-level metrics are macro-averages of eligible task-level metrics. Reports also record the number of eligible tasks for each value of \(k\).
 
-- `k = 1`
-- `k = 2`
-- `k = 3`
-- `k = 5`
+### Grader validation
 
-At `k = 1`, both metrics equal the task pass rate.
+The grading implementation is covered by automated tests for:
 
-All metric values are expressed as percentages between 0 and 100.
+- Correct and incorrect voyage calculations.
+- Invalid response structures and unexpected fields.
+- Incorrect task identifiers and task/reference mismatches.
+- Timestamp and duration tolerances.
+- Weather restrictions.
+- Port receiving windows and waiting time.
+- Hard deadline feasibility.
+- Multi-leg calculations.
+- Combined weather and port constraints.
+- Missing and invalid inputs.
+- Incorrect input field paths.
+- Prevention of unsupported calculations.
 
-### Insufficient Trials
+Reference-validation tests compare the calculation engine with stored outcomes for MB-01 through MB-08. MB-09 grading behaviour is covered by dedicated grader tests.
 
-When fewer than k trials are available, the corresponding metric is reported as `null`.
+This validates implementation consistency and expected behaviour. It does not establish that every benchmark assumption represents every real-world maritime operation.
 
-For example, at least five observed trials are required to calculate `pass@5` and `pass^5`.
+## 6. Models and Evaluation Results
 
-This prevents the benchmark from presenting estimates where the required number of observations is unavailable.
+### Evaluation status
 
-### Benchmark-Level Aggregation
+As of 9 November 2026, the benchmark pipeline has been validated using the Mock provider, and a successful external LLM evaluation has been completed using OpenAI.
 
-Task-level metrics are calculated independently for each evaluation group.
+| Provider | Configured model | Evaluation status |
+|---|---|---|
+| Mock | mock-model | Historical pipeline validation completed |
+| OpenAI | gpt-6.1-sol | Successful evaluation completed: 36 trials across two runs; all trials passed |
+| Anthropic | claude-sonnet-5-5 | Model-list check passed; generation blocked by insufficient API credits |
+| Google | gemini-3.8-flash | Model metadata check passed; generation smoke test returned a server-side timeout |
 
-Benchmark-level metrics are calculated as macro-averages of eligible task-level metrics. Each eligible task contributes equally, regardless of its number of trials.
+The successful OpenAI evaluation represents completed AI model benchmarking, while the Mock evaluation serves only to validate the benchmark pipeline, deterministic grading, and reporting functionality.
 
-The benchmark also reports the number of eligible tasks for each k value, making the coverage of each aggregate metric transparent.
 
-### Report Metric Fields
+### OpenAI evaluation
 
-Task-level JSON summaries include:
+**Provider:** OpenAI  
+**Model:** `gpt-6.1-sol`  
+**Evaluation cohort:** Earlier nine-task benchmark cohort.
 
-- `pass_at_k`
-- `pass_all_k` — the implementation field representing pass^k.
+Two successful evaluation runs were completed using the same provider and model configuration.
 
-Benchmark-level JSON summaries include:
+| Run ID | Tasks | Trials | Outcome |
+|---|---:|---:|---|
+| `run-7880f106` | 9 | 9 | All trials passed |
+| `run-3b9a370` | 9 | 27 | All trials passed |
+| **Combined** | **9** | **36** | **36/36 trials passed** |
 
-- `macro_average_pass_at_k`
-- `macro_average_pass_all_k`
-- `pass_at_k_eligible_tasks`
-- `pass_all_k_eligible_tasks`
+**Combined evaluation results**
 
-The CSV report provides flattened task-level columns:
+| Metric | Result |
+|---|---:|
+| Completed trials | 36/36 |
+| Failed trials | 0 |
+| Trial pass rate | 100% |
 
-- `pass_at_1`
-- `pass_at_2`
-- `pass_at_3`
-- `pass_at_5`
-- `pass_all_1`
-- `pass_all_2`
-- `pass_all_3`
-- `pass_all_5`
+All 36 OpenAI evaluation trials passed the benchmark's task-level grading requirements.
 
-## System Architecture
+These results provide the first successful external LLM performance evidence for MaritimeBench. They demonstrate that the evaluated model completed the earlier nine-task cohort successfully under the recorded benchmark configuration.
 
-MaritimeBench uses a modular TypeScript architecture that separates model-provider integration, task execution, response validation, deterministic grading, result aggregation, and report generation.
+The results must be interpreted within the scope of that cohort. They do not establish performance on additional tasks or scenarios that were not included in those runs.
 
-```text
-MaritimeBench/
-├── data/
-│   ├── tasks/
-│   │   ├── MB-01.json
-│   │   ├── MB-02.json
-│   │   ├── ...
-│   │   └── MB-09.json
-│   └── references/
-├── docs/
-│   └── COMMANDS.md
-├── src/
-│   ├── adapters/
-│   │   ├── mock.adapter.ts
-│   │   ├── mock.responses.ts
-│   │   ├── model.adapter.ts
-│   │   └── openai.adapter.ts
-│   ├── graders/
-│   │   └── voyage.grader.ts
-│   ├── runner/
-│   │   ├── cli.args.ts
-│   │   ├── data.loader.ts
-│   │   ├── evaluation.runner.ts
-│   │   ├── multi-trial.runner.ts
-│   │   ├── prompt.builder.ts
-│   │   ├── report.generator.ts
-│   │   ├── result.aggregator.ts
-│   │   ├── result.storage.ts
-│   │   ├── run-manifest.storage.ts
-│   │   ├── suite.loader.ts
-│   │   ├── suite.runner.ts
-│   │   └── trial-error.classifier.ts
-│   ├── schemas/
-│   │   ├── common.schema.ts
-│   │   ├── response.schema.ts
-│   │   └── task.schema.ts
-│   ├── tasks/
-│   │   └── voyage.engine.ts
-│   ├── utils/
-│   │   ├── check-openai.ts
-│   │   ├── deadline.utils.ts
-│   │   ├── port.utils.ts
-│   │   ├── run-id.utils.ts
-│   │   ├── time.utils.ts
-│   │   └── weather.utils.ts
-│   ├── cli.ts
-│   ├── eval.ts
-│   └── index.ts
-├── tests/
-├── results/
-│   ├── manifests/
-│   └── reports/
-├── .env.example
-├── package.json
-├── tsconfig.json
-└── vitest.config.ts
-```
+**Anthropic**
 
-### Architecture Components
+The configured model was found through the model-list endpoint. A generation smoke test returned HTTP 400 with an explicit insufficient-credit error.
 
-| Component | Responsibility |
+No successful benchmark trials were completed.
+
+**Google Gemini**
+
+The configured model was found through the model metadata endpoint, and network connectivity was established. A generation smoke test returned HTTP 504 (`DEADLINE_EXCEEDED`).
+
+This is an execution failure, not evidence of model reasoning failure.
+
+### Interpretation
+
+The completed OpenAI evaluation provides 36 successful trials across the earlier nine-task benchmark cohort. The Mock results separately establish historical pipeline-validation evidence.
+
+Anthropic and Google have not yet produced successful benchmark evaluation results.
+
+The OpenAI results should not be generalized beyond the evaluated task cohort. Further evaluations across providers, models, and expanded task scenarios are needed for broader comparative conclusions.
+
+## 7. Failure Analysis
+
+### Observed failures
+
+There are currently no completed external LLM trials from which to derive genuine model reasoning failures.
+
+The observed provider failures were:
+
+- OpenAI: insufficient API credits.
+- Anthropic: insufficient API credits.
+- Google: generation request deadline exceeded.
+
+These are provider execution or account-availability issues, not benchmark reasoning failures.
+
+The Mock evaluation completed without failures and cannot establish how an LLM responds to difficult or conflicting voyage-planning scenarios.
+
+### Failure categories the benchmark is designed to detect
+
+1. Incorrect travel duration or physical ETA.
+2. Failure to apply weather-related speed restrictions.
+3. Incorrect port arrival or waiting-time calculations.
+4. Incorrect deadline feasibility assessments.
+5. Failure to propagate restrictions across multiple voyage legs.
+6. Failure to identify missing required information.
+7. Failure to identify all invalid inputs.
+8. Invented calculations when required information is unavailable.
+9. Invalid or incomplete structured responses.
+
+Actual model failure examples and model-specific analysis will be reported after successful external evaluations.
+
+## 8. Transcripts and Evaluation Evidence
+
+Each successfully completed trial record stores:
+
+- Task ID and run ID.
+- Trial number.
+- Provider and model.
+- Start and completion timestamps.
+- Latency and available token usage.
+- Raw model response.
+- JSON parsing error, if any.
+- Grading score and individual checks.
+- Complete system prompt.
+- Task-specific user prompt.
+
+### Evaluation storage
+
+Evaluation trial records are stored in the `results/` directory. Individual run reports are stored under `transcripts/<RUN_ID>/`.
+
+### Aggregate report
+
+MaritimeBench generates aggregate reports from compatible completed external-provider evaluation runs. The aggregate outputs are stored in the `transcripts/` directory:
+
+- `benchmark-summary.json` — Overall benchmark results and aggregate metrics.
+- `task-summary.csv` — Consolidated task-level evaluation results.
+- `source-runs.json` — Identifies the source runs included in the aggregate.
+
+These records and reports provide traceability from individual model responses and grading decisions to the consolidated evaluation results.
+
+
+## 9. Setup and Dependencies
+
+### Requirements
+
+Verified development environment:
+
+| Dependency | Installed version |
 |---|---|
-| Adapters | Provide a common interface for model providers |
-| Schemas | Validate task definitions and model responses |
-| Voyage Engine | Handle deterministic voyage calculations |
-| Graders | Compare model outputs against reference outcomes |
-| Evaluation Runner | Execute individual model evaluations |
-| Multi-Trial Runner | Execute repeated attempts for benchmark tasks |
-| Suite Runner | Coordinate execution across benchmark tasks |
-| Result Aggregator | Calculate task-level and benchmark-level metrics |
-| Result Storage | Persist evaluation trial records |
-| Run Manifest Storage | Record evaluation run metadata |
-| Report Generator | Generate CSV and JSON evaluation reports |
-| Utilities | Handle time, weather, port, deadline, and run-ID operations |
+| Node.js | 25.9.0 |
+| npm | 11.16.0 |
+| TypeScript | 7.0.2 |
+| OpenAI SDK | 7.47.0 |
+| Anthropic SDK | 1.6.0 |
+| Google GenAI SDK | 3.0.0 |
+| Zod | 4.6.7 |
+| Vitest | 4.1.12 |
+| tsx | 4.23.15 |
+| Prettier | 3.9.10 |
+| dotenv | 18.0.9 |
+| @types/node | 26.6.6 |
 
-## Technology Stack
+The package lockfile uses lockfile version 3. Dependency version ranges are defined in `package.json`, with exact resolutions recorded in `package-lock.json`.
 
-| Technology | Purpose |
-|---|---|
-| TypeScript | Core implementation |
-| Node.js | Runtime environment |
-| Zod | Schema validation |
-| OpenAI API | External AI model evaluation |
-| Vitest | Automated testing |
-| Prettier | Code formatting |
-
-## Installation and Setup
-
-Clone the repository:
+### Clone and install
 
 ```bash
 git clone https://github.com/isonguyom/MaritimeBench.git
 cd MaritimeBench
+npm ci
 ```
 
-Install dependencies:
+### Environment configuration
 
-```bash
-npm install
-```
-
-Create your environment file:
+Create the local environment file:
 
 ```powershell
 Copy-Item .env.example .env
 ```
 
-For OpenAI evaluation, configure the following variables in `.env`:
+Configure the providers you intend to evaluate:
 
 ```env
-OPENAI_API_KEY=your_api_key
-OPENAI_MODEL=your_model_name
+# OpenAI
+OPENAI_API_KEY=
+OPENAI_MODEL=
+
+# Anthropic
+ANTHROPIC_API_KEY=
+ANTHROPIC_MODEL=
+
+# Google Gemini
+GOOGLE_API_KEY=
+GOOGLE_MODEL=
 ```
 
-The mock provider does not require OpenAI credentials.
+Mock evaluation does not require API credentials.
 
-## Running Evaluations
+Keep `.env` private. Never commit API keys or other secrets.
 
-MaritimeBench supports mock and OpenAI evaluation providers.
+## 10. Running the Benchmark
 
-### Mock Evaluation
-
-Mock evaluation is the default provider when using `npm run dev`.
+### Mock evaluation
 
 Run the complete benchmark suite:
 
@@ -313,100 +385,63 @@ Run the complete benchmark suite:
 npm run dev
 ```
 
-Run a specific task:
-
-```bash
-npm run dev -- --task MB-01
-```
-
-Explicitly select the mock provider:
-
-```bash
-npm run dev -- --provider mock
-```
-
-Run the complete suite with five trials per task:
+Run all tasks with five trials per task:
 
 ```bash
 npm run dev -- --suite all --trials 5
 ```
 
-Run a specific task with multiple trials:
+Run one task:
 
 ```bash
-npm run dev -- --task MB-01 --trials 5
+npm run dev -- --task MB-01
 ```
 
-### OpenAI Evaluation
-
-**Important:** OpenAI evaluation makes external API requests and may incur charges.
-
-Run the complete benchmark suite:
+### OpenAI evaluation
 
 ```bash
-npm run eval
-```
-
-Explicitly select the OpenAI provider:
-
-```bash
-npm run dev -- --provider openai
+npm run eval -- --provider openai --suite all --trials 5
 ```
 
 Run a specific task:
 
 ```bash
-npm run eval -- --task MB-01
+npm run eval -- --provider openai --task MB-01
 ```
 
-Run the complete suite with five trials per task:
+### Anthropic evaluation
 
 ```bash
-npm run eval -- --suite all --trials 5
+npm run eval -- --provider anthropic --suite all --trials 5
 ```
 
-Run a specific task with multiple trials:
+### Google Gemini evaluation
 
 ```bash
-npm run eval -- --task MB-01 --trials 5
+npm run eval -- --provider google --suite all --trials 5
 ```
 
-The model used for OpenAI evaluation is configured through `OPENAI_MODEL`.
+External provider evaluations make real API requests and may incur charges. Ensure that the configured account has sufficient credits.
 
-## CLI Arguments
+### Model selection
 
-| Argument | Description | Example |
-|---|---|---|
-| `--task` | Run one benchmark task | `--task MB-01` |
-| `--suite` | Select a benchmark suite | `--suite all` |
-| `--provider` | Select `mock` or `openai` | `--provider mock` |
-| `--trials` | Number of trials per task; defaults to 1 | `--trials 5` |
-| `--report` | Generate reports from an existing evaluation run | `--report` |
-| `--run-id` | Specify the evaluation run to report | `--run-id RUN_ID` |
+The model supplied through `--model` takes precedence over the provider's environment variable.
 
-Use either `--task` or `--suite`, not both.
+For example:
 
-If neither is supplied, the complete benchmark suite runs by default.
-
-For additional usage instructions, see [docs/COMMANDS.md](docs/COMMANDS.md).
-
-## Run Manifests and Result Storage
-
-Every evaluation generates a unique run ID.
-
-Run manifests are saved under:
-
-```text
-results/manifests/<RUN_ID>.json
+```bash
+npm run eval -- --provider openai --model YOUR_MODEL_ID
 ```
 
-The manifest provides metadata associated with an evaluation run.
+Otherwise, the provider-specific model variable is required:
 
-Trial records are persisted for subsequent aggregation and report generation.
+- `OPENAI_MODEL`
+- `ANTHROPIC_MODEL`
+- `GOOGLE_MODEL`
 
-Keeping evaluation runs identifiable allows results from different models and configurations to be examined independently.
+The Mock provider has the built-in model identifier `mock-model`.
 
-## Report Generation
+### Report generation
 
 Generate reports for a completed evaluation:
 
@@ -414,92 +449,198 @@ Generate reports for a completed evaluation:
 npm run dev -- --report --run-id RUN_ID
 ```
 
-Replace `RUN_ID` with the actual evaluation run ID.
-
 Reports are saved under:
 
 ```text
-results/reports/<RUN_ID>/
+results/reports/RUN_ID/
 ```
 
-Two report formats are generated:
+Generated reports:
 
-| Report | Description |
-|---|---|
-| `summary.csv` | Task-level evaluation summary, including flattened multi-trial metrics |
-| `summary.json` | Benchmark-level aggregation, task summaries, macro-averages, and eligible task counts |
+- `task-summary.csv`
+- `benchmark-summary.json`
 
-Report generation uses previously saved trial records. It does not execute new model evaluations or make additional model-provider requests.
+Run manifests are saved under `results/manifests/`, while individual trial records are saved directly under `results/`.
 
-## Quality Assurance and Validation
+Report generation uses saved trial records and does not execute new model evaluations.
 
-The project includes automated tests covering its evaluation components, including:
+### Aggregate report generation
 
-- Voyage calculations and operational constraints.
-- Task and response schema validation.
-- Deterministic grading.
-- Model-provider integration.
-- Individual and multi-trial evaluation execution.
-- Result aggregation and statistical metrics.
-- CSV and JSON report generation.
-- Run manifests and result persistence.
-- CLI argument handling and error classification.
+Generate an aggregate report from compatible completed external-provider evaluation runs:
 
-Run the complete quality checks:
+```bash
+npm run dev -- --aggregate
+```
+
+To aggregate specific runs:
+
+```bash
+npm run dev -- --aggregate --runs run-id-1,run-id-2
+```
+
+The aggregation process validates run completeness and configuration compatibility before combining results. Mock-provider runs are excluded.
+
+Aggregate reports are saved in the `transcripts/` directory:
+
+- `benchmark-summary.json` — Overall aggregate benchmark results and metrics.
+- `task-summary.csv` — Consolidated task-level results.
+- `source-runs.json` — Provenance information identifying the source runs included in the aggregate.
+
+Aggregation uses existing evaluation records and does not execute new model evaluations.
+
+### Quality checks
+
+Run formatting, TypeScript checking and the complete test suite:
 
 ```bash
 npm run quality
 ```
 
-Run individual checks:
+Individual checks:
 
 ```bash
 npm run format:check
 npm run typecheck
 npm test
 ```
+### CLI options
 
-Format source and test files:
+| Option | Description |
+|---|---|
+| `--provider` | Selects `mock`, `openai`, `anthropic`, or `google`. |
+| `--model` | Selects the model identifier supported by the provider. |
+| `--task` | Runs a specific task, such as `MB-01`. |
+| `--suite all` | Runs the complete available task suite. |
+| `--trials` | Sets the number of trials per task. |
+| `--aggregate` | Aggregates compatible completed external-provider runs. |
+| `--runs` | Restricts aggregation to specified run IDs. |
 
-```bash
-npm run format
+`--task` and `--suite` are mutually exclusive.
+
+
+## 11. Data Provenance and Prior Work
+
+### Benchmark data
+
+All nine voyage-planning task scenarios and their corresponding reference outcomes were developed specifically for MaritimeBench during the hackathon.
+
+The benchmark uses synthetic voyage-planning scenarios. It does not use an external operational voyage dataset as its task or reference source.
+
+Task definitions and expected outcomes are maintained separately:
+
+```text
+data/
+├── tasks/
+│   ├── MB-01.json
+│   ├── MB-02.json
+│   ├── ...
+│   └── MB-09.json
+└── references/
+    ├── MB-01.json
+    ├── MB-02.json
+    ├── ...
+    └── MB-09.json
 ```
 
-**Latest confirmed test status:** 401 tests across 26 test files passed. TypeScript type checking also passed. These results reflect the latest confirmed runs; the complete quality command should be rerun before final submission.
+The reference outcomes provide the expected results for deterministic grading.
 
-### Interpreting Mock Results
+### Pre-existing work and hackathon-created work
 
-The mock provider is intended to validate the evaluation pipeline and expected benchmark behaviour.
+MaritimeBench was developed as a dedicated benchmark project for the micro1 Eval Hackathon.
 
-Successful mock evaluations demonstrate that task loading, execution, response validation, grading, aggregation, and reporting work as expected.
+The task scenarios, reference outcomes, evaluation prompts, grading logic, provider integrations, runner, and reporting implementation were developed for this project.
 
-**Mock results must not be interpreted as evidence of actual AI model performance.**
+The developer's prior maritime engineering knowledge and software engineering experience informed the benchmark design.
 
-Real model performance findings require evaluations using an external model provider and analysis of the resulting trial records.
+No pre-existing external benchmark dataset is claimed as original MaritimeBench data.
 
-## Research Limitations
+### External packages and licences
 
-MaritimeBench has several important limitations:
+Third-party dependencies and their licences are governed by their respective authors and maintainers. The dependency list and resolved versions are recorded in `package.json` and `package-lock.json`.
 
-- Benchmark tasks use synthetic voyage scenarios rather than live operational vessel data.
-- The benchmark covers a defined set of nine scenarios and does not represent every maritime operational condition.
-- Deterministic grading evaluates responses against predefined reference outcomes and assumptions.
-- Results may vary depending on model version, configuration, prompting, and sampling behaviour.
-- Multi-trial metrics describe performance across observed attempts and should not be interpreted as guarantees of future model behaviour.
-- The benchmark is an evaluation tool, not a replacement for professional maritime judgment, navigation systems, or operational decision-making.
+No project-level `LICENSE` file is currently present in the repository. The project should not be assumed to be released under MIT or another open-source licence.
 
-## Research Direction
+## 12. Architecture
 
-MaritimeBench aims to contribute to the evaluation of AI systems in maritime operations by moving beyond isolated ETA calculations toward constraint-aware voyage planning.
+MaritimeBench uses a provider-independent architecture that separates benchmark data, model integrations, evaluation execution, deterministic grading, result storage, and report generation.
 
-Its emphasis is on numerical correctness, operational feasibility, constraint integration, information handling, and consistency across repeated attempts.
+```text
+MaritimeBench/
+├── data/
+│   ├── tasks/              # Nine benchmark task definitions
+│   └── references/         # Validated reference outcomes
+├── src/
+│   ├── adapters/           # AI provider and Mock integrations
+│   ├── graders/            # Deterministic response grading
+│   ├── runner/             # Evaluation execution and reporting workflows
+│   ├── schemas/            # Data and response validation schemas
+│   ├── tasks/              # Task loading and handling
+│   ├── utils/              # Shared utilities
+│   ├── cli.ts              # CLI argument handling and commands
+│   ├── index.ts             # Main application entry point
+│   └── eval.ts              # External model evaluation entry point
+├── tests/                   # Automated tests
+├── docs/                    # Project documentation
+├── results/
+│   ├── manifests/           # Evaluation run manifests
+│   └──                      # Individual trial records
+├── transcripts/
+│   ├── <RUN_ID>/            # Individual run reports
+│   ├── benchmark-summary.json
+│   ├── task-summary.csv
+│   └── source-runs.json      # Aggregate report provenance
+├── .env.example
+├── package.json
+├── package-lock.json
+├── tsconfig.json
+└── README.md
+```
 
-The benchmark provides a foundation for comparing model behaviour under controlled maritime planning conditions and identifying areas where AI-assisted operational reasoning requires improvement.
+### Main components
 
-## License
+- **Benchmark data:** Defines the voyage-planning tasks and their reference outcomes.
+- **Provider adapters:** Integrate Mock, OpenAI, Anthropic, and Google Gemini.
+- **Evaluation runner:** Executes benchmark tasks and records model responses.
+- **Deterministic grader:** Evaluates responses against predefined reference outcomes.
+- **Result storage:** Preserves trial records and run manifests.
+- **Reporting and aggregation:** Generates individual evaluation reports and consolidated reports across compatible runs.
+- **CLI:** Provides commands for evaluation, report generation, and aggregation.
 
-License information will be added when the project's distribution and reuse terms are finalized.
 
----
+## 13. Limitations and Future Work
 
-**Repository:** [github.com/isonguyom/MaritimeBench](https://github.com/isonguyom/MaritimeBench)
+MaritimeBench is a controlled benchmark and does not represent the full complexity of operational maritime decision-making.
+
+Current limitations include:
+
+- Synthetic scenarios cannot capture every real-world voyage condition.
+- Results depend on the task definitions, prompts, and grading rules used.
+- API availability, rate limits, and provider errors can affect execution.
+- The historical successful OpenAI results do not establish performance across every available provider.
+- Additional model evaluations are needed to build a broader comparative evidence base.
+- Genuine model failure transcripts and measured cost/runtime data remain important evidence gaps.
+
+Future work includes:
+
+- Expanding the benchmark task suite.
+- Running reproducible evaluations across multiple model providers.
+- Increasing repeated trials for statistical comparison.
+- Publishing representative successful and failed transcripts.
+- Measuring API costs and execution time.
+- Improving failure analysis and cross-model comparison.
+
+## 14. Project Status
+
+MaritimeBench has an implemented nine-task benchmark suite, provider-independent evaluation tooling, deterministic grading, trial storage, and report aggregation.
+
+Historical OpenAI evaluation evidence includes 36 successful trials across a nine-task cohort.
+
+The benchmark remains under active development, with further provider evaluations, failure analysis, and documentation improvements required before making broader claims about model performance in operational voyage planning.
+
+
+- **Project:** MaritimeBench
+- **Research title:** Beyond ETA: Evaluating AI in Operational Voyage Planning
+- **Hackathon:** micro1 Eval Hackathon
+- **Repository:** https://github.com/isonguyom/MaritimeBench
+- **Video walkthrough:** [MaritimeBench Walkthrough](https://drive.google.com/file/d/10H_2VHe2dgooepeDGwxMrXL-g45_Jcah/view?usp=sharing)
+- **Project licence:** Not yet specified

@@ -148,6 +148,11 @@ describe("Report generator", () => {
 
     expect(values[headers.indexOf("pass_at_2")]).toBe("");
     expect(values[headers.indexOf("pass_all_2")]).toBe("");
+
+    expect(headers).toContain("model_family");
+    expect(headers).toContain("model_family_source");
+    expect(values[headers.indexOf("model_family")]).toBe("unknown");
+    expect(values[headers.indexOf("model_family_source")]).toBe("unknown");
   });
 
   it("should return an empty CSV when there are no trials", () => {

@@ -90,6 +90,8 @@ function createTaskSummary(overrides: Partial<TaskSummary> = {}): TaskSummary {
     task_id: "MB-03",
     provider: "mock",
     model: "mock-model",
+    model_family: "unknown",
+    model_family_source: "unknown",
     run_id: "run-001",
     temperature: 0,
     max_output_tokens: 1000,
@@ -595,6 +597,32 @@ describe("Result aggregator", () => {
     expect(result.benchmark_summaries[0].total_trials).toBe(3);
   });
 
+  it("should include inferred model-family metadata in task and benchmark summaries", () => {
+    const trials = [
+      createTrial({
+        model: "gpt-6.1-sol",
+        trial_number: 1,
+      }),
+      createTrial({
+        model: "gpt-6.1-sol",
+        trial_number: 2,
+      }),
+    ];
+
+    const result = aggregateResults(trials, [createTask()]);
+
+    expect(result.task_summaries[0].model).toBe("gpt-6.1-sol");
+    expect(result.task_summaries[0].model_family).toBe("gpt-6.1");
+    expect(result.task_summaries[0].model_family_source).toBe(
+      "inferred_from_model_id",
+    );
+
+    expect(result.benchmark_summaries[0].model).toBe("gpt-6.1-sol");
+    expect(result.benchmark_summaries[0].model_family).toBe("gpt-6.1");
+    expect(result.benchmark_summaries[0].model_family_source).toBe(
+      "inferred_from_model_id",
+    );
+  });
   it("should throw when a task definition is missing", () => {
     const trials = [createTrial()];
 
